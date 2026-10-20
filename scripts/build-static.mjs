@@ -35,6 +35,21 @@ if (!fs.existsSync(DADOS)) {
 fs.rmSync(DIST, { recursive: true, force: true });
 copiar(path.join(RAIZ, 'app'), DIST);
 
+// O CSS bloqueia o primeiro render: no ficheiro publicado vai dentro do HTML,
+// poupando um pedido (~0,5 s em 4G lento). Em app/ continua como <link>, para
+// o servidor local e a edição não mudarem.
+{
+  const htmlPath = path.join(DIST, 'index.html');
+  const css = fs.readFileSync(path.join(RAIZ, 'app', 'css', 'app.css'), 'utf8');
+  const ligacao = '<link rel="stylesheet" href="/css/app.css">';
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  if (!html.includes(ligacao)) {
+    console.error('index.html já não tem a ligação ao CSS esperada — o inline foi ignorado');
+    process.exit(1);
+  }
+  fs.writeFileSync(htmlPath, html.replace(ligacao, () => `<style>\n${css}</style>`));
+}
+
 fs.mkdirSync(path.join(DIST, 'data'), { recursive: true });
 fs.copyFileSync(DADOS, path.join(DIST, 'data', 'farense.json'));
 
