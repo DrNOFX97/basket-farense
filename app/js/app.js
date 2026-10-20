@@ -77,6 +77,11 @@ function desenharSidebar(ep, tAtual) {
   for (const t of ep.equipas) contagem[t.nomeCurto] = (contagem[t.nomeCurto] || 0) + 1;
   const duplicados = new Set(Object.keys(contagem).filter((k) => contagem[k] > 1));
 
+  // Com uma só época o seletor não tem utilidade: esconde-o.
+  const varias = epocas().length > 1;
+  document.getElementById('season').hidden = !varias;
+  document.getElementById('sel-epoca').hidden = !varias;
+
   document.getElementById('season').innerHTML = epocas().map((e) => `
     <button type="button" data-epoca="${esc(e.id)}"
       class="${e.id === ep.id ? 'on' : ''}"

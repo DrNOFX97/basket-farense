@@ -49,7 +49,7 @@ Cinco vistas por escalão, com URL própria (`#/época/escalão/vista`):
 - **Ao vivo** — marcador e últimas acções do jogo a decorrer, com actualização
   automática; fora de jogos, mostra os próximos encontros.
 
-Duas épocas: **2025/2026** e **2026/2027**. Os escalões vão de Sub 10 a
+Época **2026/2027**. Os escalões vão de Sub 10 a
 Séniores, masculinos e femininos, incluindo equipas A/B e competições
 distintas (campeonato, festival, taça).
 

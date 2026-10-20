@@ -2,7 +2,7 @@
 """Constroi data/farense.json a partir da API NBN23 (Swish).
 
 Uso:
-    python3 build_data.py               # epocas 2025/2026 e 2026/2027
+    python3 build_data.py               # epoca 2026/2027
     python3 build_data.py 2026/2027
     python3 build_data.py --sem-cache   # ignora cache local
 
@@ -347,7 +347,7 @@ def main():
     alvo = [a for a in sys.argv[1:] if not a.startswith('--')]
     d = gql('seasons', Q_SEASONS)
     seasons = (d.get('data') or {}).get('seasons') or []
-    seasons = [s for s in seasons if s['name'] in ('2025/2026', '2026/2027')]
+    seasons = [s for s in seasons if s['name'] in ('2026/2027',)]
     if alvo:
         seasons = [s for s in seasons if s['name'] in alvo]
 
