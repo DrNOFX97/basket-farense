@@ -170,7 +170,8 @@ Base: <https://basket-farense.netlify.app>. A chave vai no cabeçalho
 
 Sem chave ou com chave errada responde 401. As chaves ficam na variável de
 ambiente `API_KEYS` do Netlify, separadas por vírgulas (uma por cliente, para
-poder revogar uma sem afectar as outras):
+poder revogar uma sem afectar as outras; mínimo 32 caracteres, as mais curtas
+são ignoradas — `openssl rand -hex 16`):
 
 ```bash
 netlify env:set API_KEYS "chave1,chave2"   # e voltar a fazer deploy

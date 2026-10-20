@@ -11,7 +11,7 @@
  *   GET /api/v1/<época>/<equipa>                 equipa completa
  *   GET /api/v1/<época>/<equipa>/jogos/<fid>     um jogo (boxscore e acções)
  */
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import dados from '../../data/farense.json' with { type: 'json' };
 
 const CORS = {
@@ -26,15 +26,17 @@ const resposta = (statusCode, corpo, extra = {}) => ({
   body: JSON.stringify(corpo),
 });
 
+// Chaves curtas são ignoradas: `openssl rand -hex 16` dá 32 caracteres.
+const CHAVE_MIN = 32;
+
 function chavesValidas() {
-  return (process.env.API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
+  return (process.env.API_KEYS || '').split(',').map((k) => k.trim()).filter((k) => k.length >= CHAVE_MIN);
 }
 
-function igual(a, b) {
-  const x = Buffer.from(a);
-  const y = Buffer.from(b);
-  return x.length === y.length && timingSafeEqual(x, y);
-}
+// Compara resumos SHA-256 (largura fixa), por isso o tempo não depende do
+// comprimento da chave recebida.
+const resumo = (t) => createHash('sha256').update(String(t)).digest();
+const igual = (a, b) => timingSafeEqual(resumo(a), resumo(b));
 
 function autorizado(headers) {
   const bearer = /^Bearer\s+(.+)$/i.exec(headers.authorization || '');
