@@ -1080,3 +1080,7 @@ tr.total td.name { color: var(--tx-2); }
 @media (prefers-contrast: more) and (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) { --line: #8A92A0; --line-2: #6B7380; --tx-3: #3F4756; --tx-2: #2B323E; }
 }
+
+/* O Netlify injeta este iframe ("Powered by Netlify") no canto inferior e
+   tapava a Tab Bar em telemóvel. */
+#nl-badge-frame { display: none !important; }
