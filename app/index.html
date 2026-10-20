@@ -73,7 +73,19 @@
       </div>
     </header>
 
-    <main class="content" id="conteudo" tabindex="-1"></main>
+    <main class="content" id="conteudo" tabindex="-1" aria-busy="true">
+      <!-- Esqueleto mostrado até os dados chegarem; é substituído no primeiro render. -->
+      <div class="skel-page" aria-hidden="true">
+        <div class="skel" style="width:38%;height:12px"></div>
+        <div class="skel" style="width:62%;height:30px;margin:12px 0 8px"></div>
+        <div class="skel" style="width:80%;height:14px"></div>
+        <div class="skel-row">
+          <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+        </div>
+        <div class="skel" style="height:180px;margin-top:20px;border-radius:12px"></div>
+        <div class="skel" style="height:180px;margin-top:14px;border-radius:12px"></div>
+      </div>
+    </main>
   </div>
 </div>
 

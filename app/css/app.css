@@ -593,6 +593,14 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 @keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 
+.skel-row { display: flex; gap: 10px; margin-top: 20px; }
+.skel-row .skel { flex: 1; height: 56px; border-radius: 12px; }
+
+/* Entrada suave de cada vista. Com prefers-reduced-motion a regra global
+   mais abaixo anula a animação. */
+.vista-enter { animation: entra .28s cubic-bezier(.2, .8, .2, 1); }
+@keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
 .erro-fatal { max-width: 520px; margin: 18vh auto; padding: 0 24px; }
 .erro-fatal h1 { font-size: 20px; margin-bottom: 10px; }
 .erro-fatal code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }

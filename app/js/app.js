@@ -176,6 +176,13 @@ function render(ep, t, vista, param) {
     ${desenharTabs(ep, t, vista)}
     <div id="vista">${v.render(t, ctx)}</div>`;
 
+  root.removeAttribute('aria-busy');
+  // Reinicia a animação de entrada a cada troca de vista.
+  const vistaEl = document.getElementById('vista');
+  vistaEl.classList.remove('vista-enter');
+  void vistaEl.offsetWidth;
+  vistaEl.classList.add('vista-enter');
+
   if (typeof v.mount === 'function') {
     limpar = v.mount(root, t, ctx) || null;
   }
@@ -341,6 +348,7 @@ function ligarShell() {
   try {
     await carregar();
   } catch (e) {
+    document.getElementById('conteudo').innerHTML = '';
     document.getElementById('erro-fatal').hidden = false;
     document.getElementById('erro-msg').textContent = e.message;
     document.getElementById('erro-retry').onclick = () => location.reload();
