@@ -9,3 +9,4 @@ dist/
 node_modules/
 netlify/lib/equipas.mjs
 .playwright-mcp/
+fotos-pendentes/
