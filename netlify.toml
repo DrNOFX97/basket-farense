@@ -22,18 +22,18 @@
   status = 200
   force = true
 
+# API de leitura com chave (netlify/functions/api.mjs). Precisa da variável de
+# ambiente API_KEYS no projecto Netlify.
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/data/farense.json"
   [headers.values]
     Cache-Control = "public, max-age=600"
-
-# API pública de leitura (app iOS e outros clientes). CORS aberto: são dados
-# públicos e não há cookies nem credenciais.
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Cache-Control = "public, max-age=300"
 
 [[headers]]
   for = "/*"

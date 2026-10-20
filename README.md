@@ -157,19 +157,29 @@ node scripts/check-live.mjs <email> <password>
 
 ## API para outras apps
 
-O build gera uma API JSON só de leitura em `/api/v1/` (ficheiros estáticos, CORS
-aberto, cache de 5 minutos). Base: <https://basket-farense.netlify.app>.
+API JSON só de leitura com chave, servida pela função `netlify/functions/api.mjs`.
+Base: <https://basket-farense.netlify.app>. A chave vai no cabeçalho
+`X-API-Key: <chave>` (ou `Authorization: Bearer <chave>`), nunca na URL.
 
 | Endpoint | Conteúdo |
 |---|---|
-| `/api/v1/index.json` | épocas e equipas (sem jogos), com o `url` de cada equipa |
-| `/api/v1/<época>/<equipa>.json` | equipa completa: resumo, classificação, plantel, jogos (parciais, boxscore, acções) |
-| `/api/live` | estado ao vivo (já existente) |
+| `/api/v1/all` | tudo: épocas, equipas, classificação, plantel, jogos |
+| `/api/v1/index` | épocas e equipas (sem jogos), com o `url` de cada uma |
+| `/api/v1/<época>/<equipa>` | equipa completa |
+| `/api/v1/<época>/<equipa>/jogos/<fid>` | um jogo (parciais, boxscore, acções) |
 
-Exemplo: `/api/v1/2026-2027/seniores-m.json`. Os dados são actualizados quando
-corres `python3 build_data.py` e voltas a publicar. O campo `gerado` diz quando
-foi a última extracção. Notas: as datas vêm com `Z` mas são hora local (não
-converter fusos) e não há lançamentos falhados nem ressaltos (ver acima).
+Sem chave ou com chave errada responde 401. As chaves ficam na variável de
+ambiente `API_KEYS` do Netlify, separadas por vírgulas (uma por cliente, para
+poder revogar uma sem afectar as outras):
+
+```bash
+netlify env:set API_KEYS "chave1,chave2"   # e voltar a fazer deploy
+node scripts/check-api.mjs                 # teste local, sem Netlify
+```
+
+Os dados mudam quando corres `python3 build_data.py` e voltas a publicar; o
+campo `gerado` diz quando foi a última extracção. As datas vêm com `Z` mas são
+hora local (não converter fusos).
 
 ---
 
