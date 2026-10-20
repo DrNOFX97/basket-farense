@@ -239,7 +239,19 @@ async function verificarLive() {
 }
 
 // -------------------------------------------------------------------- boot --
+// Alterna claro/escuro. Parte do que o sistema usa agora e guarda a escolha.
+function alternarTema() {
+  const raiz = document.documentElement;
+  const atual = raiz.dataset.theme
+    || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const novo = atual === 'light' ? 'dark' : 'light';
+  raiz.dataset.theme = novo;
+  try { localStorage.setItem('tema', novo); } catch { /* sem armazenamento */ }
+}
+
 function ligarShell() {
+  document.querySelectorAll('[data-tema-toggle]').forEach((b) => b.addEventListener('click', alternarTema));
+
   document.getElementById('nav').addEventListener('click', (e) => {
     const b = e.target.closest('[data-equipa]');
     if (!b) return;

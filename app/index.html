@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Farense Basket</title>
 <meta name="description" content="Calendário, resultados, classificações e estatísticas de todos os escalões de basquetebol do SC Farense.">
-<meta name="theme-color" content="#08090B">
+<meta name="theme-color" content="#08090B" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
+<script>
+  // Aplica o tema guardado antes da primeira pintura, para não piscar.
+  try {
+    var t = localStorage.getItem('tema');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  } catch (e) { /* sem armazenamento: segue o sistema */ }
+</script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Farense Basket">
 <meta property="og:title" content="Farense Basket">
@@ -39,6 +47,10 @@
         <span class="live-dot" id="live-dot" hidden></span>
         <span id="live-txt">Ao vivo</span>
       </a>
+      <button type="button" class="theme-btn theme-side" data-tema-toggle>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg>
+        <span>Tema</span>
+      </button>
       <p class="foot-note" id="foot-note"></p>
     </div>
   </aside>
@@ -48,6 +60,9 @@
       <div class="brand brand-sm">
         <div class="brand-mark" aria-hidden="true"><img src="/img/emblema.png" alt="" width="38" height="38"></div>
         <div class="brand-txt"><strong>Farense</strong><span>Basket</span></div>
+        <button type="button" class="theme-btn theme-icon" data-tema-toggle aria-label="Mudar tema">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg>
+        </button>
       </div>
       <div class="mobile-controls">
         <label class="sr-only" for="sel-equipa">Escalão</label>
