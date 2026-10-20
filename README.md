@@ -79,6 +79,24 @@ O token de sessão é guardado em cache no directório de cache do utilizador
 (`%LOCALAPPDATA%\farense-basket` no Windows, `~/.cache/farense-basket` no
 Linux) e nunca dentro do projecto.
 
+### Fotos manuais
+
+Sem credenciais Swish, as fotos podem ser adicionadas à mão nas pastas de cada
+escalão dentro de `app/fotos/` (`seniores-m/`, `sub18-m-a/`, etc.). O nome do
+ficheiro deve incluir o nome e o FID do jogador, por exemplo
+`Gustavo Gonçalves 213344.jpg`. Também é aceite apenas o FID (`213344.jpg`) ou
+apenas o nome completo, mas o nome + FID é o mais seguro. A lista
+`app/fotos/jogadores.csv` tem os nomes, números, FIDs, pastas e nomes de
+ficheiro sugeridos; depois de colocar as fotos, corre:
+
+```bash
+npm run fotos
+```
+
+O mapa gerado (`app/fotos/fotos.json`) é carregado pela app e tem prioridade
+sobre as fotos da API. Formatos: JPG, PNG, WebP ou AVIF; idealmente quadradas,
+400×400 px e menos de 500 KB.
+
 ---
 
 ## Limites dos dados

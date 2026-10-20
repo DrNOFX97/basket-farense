@@ -16,6 +16,7 @@ import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import unquote
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(BASE, 'app')
@@ -77,7 +78,7 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- rotas ----------------------------------------------------------
     def do_GET(self):
-        caminho = self.path.split('?')[0]
+        caminho = unquote(self.path.split('?')[0])
 
         if caminho == '/api/live':
             if estado is None:

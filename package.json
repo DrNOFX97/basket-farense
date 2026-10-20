@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Web app com o calendário, resultados e estatísticas de basquetebol do SC Farense (dados NBN23).",
   "scripts": {
-    "check": "node scripts/check-views.mjs"
+    "check": "node scripts/check-views.mjs",
+    "fotos": "node scripts/fotos.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4"

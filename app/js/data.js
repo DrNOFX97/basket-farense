@@ -20,6 +20,38 @@ async function pedir() {
   }
 }
 
+async function pedirFotos() {
+  try {
+    const r = await fetch('/fotos/fotos.json', { cache: 'no-cache' });
+    if (!r.ok) return null;
+    const mapa = await r.json();
+    return mapa && typeof mapa === 'object' ? mapa : null;
+  } catch {
+    return null;
+  }
+}
+
+// As fotos manuais têm prioridade sobre as que vierem da API.
+function aplicarFotos(d, mapa) {
+  if (!mapa) return;
+  for (const ep of d.epocas || []) {
+    for (const t of ep.equipas || []) {
+      for (const p of t.plantel || []) {
+        const f = mapa[String(p.fid)];
+        if (f) p.foto = f;
+      }
+      for (const j of t.jogos || []) {
+        for (const lado of ['casa', 'fora']) {
+          for (const p of (j.jogadores && j.jogadores[lado]) || []) {
+            const f = mapa[String(p.fid)];
+            if (f) p.foto = f;
+          }
+        }
+      }
+    }
+  }
+}
+
 export async function carregar() {
   try {
     DADOS = await pedir();
@@ -27,6 +59,7 @@ export async function carregar() {
     await new Promise((res) => setTimeout(res, 800));
     DADOS = await pedir();
   }
+  aplicarFotos(DADOS, await pedirFotos());
   if (!DADOS.epocas || !DADOS.epocas.length) throw new Error('o ficheiro de dados está vazio');
   return DADOS;
 }
