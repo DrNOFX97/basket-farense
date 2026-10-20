@@ -8,7 +8,7 @@ Branch `ui-audit`. Esforço: B baixo · M médio · A alto. Impacto UX: ↑ baix
 | UTF-8 em `serve.py`/`live.py`/`build_data.py` | local/Windows | B | ↑↑↑ | feito `558bd70` |
 | Erro de dados com causa, 2 tentativas e "Tentar de novo" | todas | B | ↑↑ | feito `558bd70` |
 
-## P1 — Estrutura por plataforma (feito, exceto sheets)
+## P1 — Estrutura por plataforma (feito, exceto swipe-back)
 | Item | Plataforma | Esforço | Impacto | Estado |
 |---|---|---|---|---|
 | Tab Bar inferior (5 destinos) | mobile | M | ↑↑↑ | feito `d104159` |
@@ -16,7 +16,7 @@ Branch `ui-audit`. Esforço: B baixo · M médio · A alto. Impacto UX: ↑ baix
 | Chips do cabeçalho numa linha | mobile | B | ↑↑ | feito `d93b39a` |
 | Layout tablet 768–1023 px | tablet | B | ↑↑ | feito `7fe382f` |
 | Atalhos de teclado + painel de ajuda | desktop | M | ↑↑ | feito `cd75c34` |
-| Sheet para escalão/época (no lugar dos `<select>`) | mobile | M | ↑↑ | por fazer |
+| Sheet de escalão (no lugar do `<select>`), com arrastar para fechar | mobile | M | ↑↑ | feito |
 | Detalhe de jogo como push com swipe-back | mobile | A | ↑↑ | por fazer |
 
 ## P2 — Design system e Liquid Glass (feito)

@@ -66,8 +66,9 @@
         </button>
       </div>
       <div class="mobile-controls">
-        <label class="sr-only" for="sel-equipa">Escalão</label>
-        <select id="sel-equipa" class="select"></select>
+        <button type="button" id="btn-equipa" class="select sheet-btn" aria-haspopup="dialog" aria-label="Escolher escalão">
+          <span id="btn-equipa-txt"></span>
+        </button>
         <label class="sr-only" for="sel-epoca">Época</label>
         <select id="sel-epoca" class="select select-sm"></select>
       </div>
@@ -102,6 +103,14 @@
     <dt><kbd>?</kbd></dt><dd>Esta ajuda</dd>
   </dl>
   <form method="dialog"><button class="btn" autofocus>Fechar</button></form>
+</dialog>
+
+<dialog class="sheet" id="sheet-equipa" aria-labelledby="sheet-t">
+  <div class="sheet-painel">
+    <div class="sheet-grip" aria-hidden="true"><i></i></div>
+    <h2 id="sheet-t">Escalão</h2>
+    <div class="sheet-lista" id="sheet-lista"></div>
+  </div>
 </dialog>
 
 <nav class="tabbar" id="tabbar" aria-label="Secções do escalão"></nav>

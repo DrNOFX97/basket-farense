@@ -33,7 +33,7 @@ Espaço 4/8/12/16/24/32/48 · Raios 8 (controlos) / 12 (cartões) / 16 / 999 (pi
 - **Desktop/tablet:** superfícies neutras sem vidro, tabelas com ordenação, foco visível, atalhos (`g`+`r/j/c/p/l`, `[` `]`, `t`, `?`).
 
 ## Componentes base
-`.card` · `.chip` · `.tabs`/`.tab` · `.tb` (Tab Bar) · `.select` · `.btn` · `.theme-btn` · `kbd` · `dialog.ajuda` · `table` + `.tw` (scroll dentro do cartão) · `.cards-m` (`.pcard`, `.ccard`) · `.skel` · `.empty` · `.aviso`.
+`.card` · `.chip` · `.tabs`/`.tab` · `.tb` (Tab Bar) · `.sheet` (sheet de escalão) · `.select` · `.btn` · `.theme-btn` · `kbd` · `dialog.ajuda` · `table` + `.tw` (scroll dentro do cartão) · `.cards-m` (`.pcard`, `.ccard`) · `.skel` · `.empty` · `.aviso`.
 
 ## Movimento
 Entrada de vista 280 ms (`.vista-enter`), Tab Bar com transição de 200 ms. `prefers-reduced-motion` anula todas as animações e transições.

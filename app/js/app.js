@@ -108,15 +108,28 @@ function desenharSidebar(ep, tAtual) {
 // ----------------------------------------------------------------- mobile --
 function desenharMobile(ep, t) {
   const { seniores, formacao } = gruposDe(ep);
-  const opt = (lista) => lista.map((x) => `
-    <option value="${esc(x.id)}" ${x.id === t.id ? 'selected' : ''}>${esc(x.nomeCurto)}</option>`).join('');
+  const contagem = {};
+  for (const x of ep.equipas) contagem[x.nomeCurto] = (contagem[x.nomeCurto] || 0) + 1;
+  const item = (x) => {
+    const r = x.resumo || {};
+    const reg = r.realizados ? `${r.v}-${r.d}` : '—';
+    const marca = contagem[x.nomeCurto] > 1 ? ` ${esc(x.variante || '?')}` : '';
+    const ativa = x.id === t.id;
+    return `<li><button type="button" class="sheet-item ${ativa ? 'on' : ''}" data-equipa="${esc(x.id)}"
+      ${ativa ? 'aria-current="true"' : ''}>
+      <span class="sheet-nome">${esc(x.nomeCurto)}${marca}<small>${esc(x.competicao)}</small></span>
+      <span class="sheet-rec">${esc(reg)}</span>
+      <svg class="sheet-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    </button></li>`;
+  };
 
   let html = '';
-  if (seniores.length) html += `<optgroup label="Séniores">${opt(seniores)}</optgroup>`;
-  if (formacao.length) html += `<optgroup label="Formação">${opt(formacao)}</optgroup>`;
+  if (seniores.length) html += `<h3>Séniores</h3><ul>${seniores.map(item).join('')}</ul>`;
+  if (formacao.length) html += `<h3>Formação</h3><ul>${formacao.map(item).join('')}</ul>`;
 
-  document.getElementById('sel-equipa').innerHTML = html;
-  document.getElementById('sel-equipa').value = t.id;
+  document.getElementById('sheet-lista').innerHTML = html;
+  document.getElementById('btn-equipa-txt').textContent = t.nomeCurto
+    + (contagem[t.nomeCurto] > 1 ? ` ${t.variante || ''}` : '');
 
   const curto = (nome) => nome.split('/').map((x) => x.slice(2)).join('/');
   document.getElementById('sel-epoca').innerHTML = epocas().map((e) => `
@@ -251,6 +264,51 @@ async function verificarLive() {
 }
 
 // -------------------------------------------------------------------- boot --
+// Sheet de escalão (mobile): abre de baixo, fecha ao escolher, tocar fora,
+// Esc ou arrastar o puxador para baixo.
+function ligarSheet() {
+  const sheet = document.getElementById('sheet-equipa');
+  const painel = sheet.querySelector('.sheet-painel');
+  const fechar = () => sheet.close();
+
+  document.getElementById('btn-equipa').addEventListener('click', () => {
+    sheet.showModal();
+    const ativo = sheet.querySelector('.sheet-item.on');
+    if (ativo) ativo.scrollIntoView({ block: 'center' });
+  });
+
+  sheet.addEventListener('click', (e) => {
+    if (e.target === sheet) { fechar(); return; }
+    const b = e.target.closest('[data-equipa]');
+    if (!b) return;
+    const p = parse();
+    location.hash = href(p.epoca, b.dataset.equipa, 'resumo');
+    fechar();
+  });
+
+  const puxador = sheet.querySelector('.sheet-grip');
+  let y0 = null;
+  puxador.addEventListener('pointerdown', (e) => {
+    y0 = e.clientY;
+    puxador.setPointerCapture(e.pointerId);
+    painel.style.transition = 'none';
+  });
+  puxador.addEventListener('pointermove', (e) => {
+    if (y0 === null) return;
+    painel.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`;
+  });
+  const largar = (e) => {
+    if (y0 === null) return;
+    const dy = e.clientY - y0;
+    y0 = null;
+    painel.style.transition = '';
+    painel.style.transform = '';
+    if (dy > 90) fechar();
+  };
+  puxador.addEventListener('pointerup', largar);
+  puxador.addEventListener('pointercancel', largar);
+}
+
 // Alterna claro/escuro. Parte do que o sistema usa agora e guarda a escolha.
 function alternarTema() {
   const raiz = document.documentElement;
@@ -329,10 +387,7 @@ function ligarShell() {
     location.hash = href(p.epoca, p.equipa, 'jogo', b.dataset.jogo);
   });
 
-  document.getElementById('sel-equipa').addEventListener('change', (e) => {
-    const p = parse();
-    location.hash = href(p.epoca, e.target.value, 'resumo');
-  });
+  ligarSheet();
 
   document.getElementById('sel-epoca').addEventListener('change', (e) => {
     trocarEpoca(e.target.value);

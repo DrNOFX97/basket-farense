@@ -15,7 +15,7 @@ Auditoria de 2026-10-20 a https://basket-farense.netlify.app/ e ao código em `a
 | Tabelas largas com scroll horizontal (plantel, classificação) | corrigido: cards |
 | Cabeçalho com 5 chips ocupava ~190 px antes do conteúdo | corrigido: linha deslizável (57 px) |
 | `backdrop-filter` só na topbar | corrigido: Tab Bar em vidro com fallback |
-| Troca de escalão/época em dois `<select>` nativos | mantido (decisão: dropdown por serem muitos) |
+| Troca de escalão em `<select>` nativo | corrigido: sheet de baixo com Séniores/Formação, registo e seleção marcada |
 | Detalhe de jogo sem swipe-back; sem pull-to-refresh | por fazer |
 
 ## Desktop
