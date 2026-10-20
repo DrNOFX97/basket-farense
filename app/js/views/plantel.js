@@ -77,10 +77,35 @@ function tabela(t) {
     <td>${soma('val')}</td><td>${soma('pm') > 0 ? '+' : ''}${soma('pm')}</td>
   </tr>`;
 
-  return `<div class="tw"><table class="box">
+  return `${seletorOrdem()}${cartoes(arr)}<div class="tw tw-alt"><table class="box">
     <thead><tr>${cab}</tr></thead>
     <tbody>${linhas}${total}</tbody>
   </table></div>`;
+}
+
+// Em telemóvel os cabeçalhos da tabela desaparecem; este seletor faz o mesmo
+// papel que clicar numa coluna.
+const ORDENAVEIS = ['pts', 'ppg', 'mpg', 'val', 'c3', 'ft', 'nome', 'num'];
+
+function seletorOrdem() {
+  const opts = COLS.filter((c) => ORDENAVEIS.includes(c.k)).map((c) => {
+    const nome = { nome: 'Nome', num: 'Número' }[c.k] || c.t;
+    return `<option value="${c.k}" ${ordem.k === c.k ? 'selected' : ''}>${nome}</option>`;
+  }).join('');
+  return `<label class="ord-m"><span>Ordenar por</span>
+    <select class="select" data-ordenar>${opts}</select></label>`;
+}
+
+function cartoes(arr) {
+  return `<ul class="cards-m">${arr.map((a) => `<li class="pcard">
+    <span class="pnum">${esc(a.num ?? '—')}</span>
+    <div class="pmain">
+      <strong>${esc(a.nome)}</strong>
+      <span>${a.j} J · ${F.mmss(a.mpg)} min · ${F.num(a.ppg, 1)} ppj</span>
+      <span class="pdet">2P ${a.c2} · 3P ${a.c3} · LL ${a.cll}/${a.tll}</span>
+    </div>
+    <div class="ppts"><b>${a.pts}</b><span>PTS</span></div>
+  </li>`).join('')}</ul>`;
 }
 
 export default {
@@ -115,6 +140,14 @@ export default {
       const k = th.dataset.sort;
       if (ordem.k === k) ordem.dir *= -1;
       else ordem = { k, dir: k === 'nome' || k === 'num' ? 1 : -1 };
+      alvo.innerHTML = tabela(t);
+    });
+
+    alvo.addEventListener('change', (e) => {
+      const sel = e.target.closest('[data-ordenar]');
+      if (!sel) return;
+      const k = sel.value;
+      ordem = { k, dir: k === 'nome' || k === 'num' ? 1 : -1 };
       alvo.innerHTML = tabela(t);
     });
   },

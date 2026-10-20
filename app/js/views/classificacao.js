@@ -26,7 +26,14 @@ export default {
         <h2>${esc(c.grupo || t.competicao)}</h2>
         <span>${esc(t.projeto || '')}${t.projeto ? ' · ' : ''}${esc(t.epoca)}</span>
       </div>
-      ${card(null, `<div class="tw"><table>
+      ${card(null, `<ul class="cards-m">${c.linhas.map((l) => `<li class="ccard ${l.eu ? 'eu' : ''}">
+        <span class="cpos">${esc(l.pos)}</span>
+        <div class="pmain">
+          <strong>${esc(l.nome)}</strong>
+          <span>${l.j ?? '—'} J · ${l.pm != null ? F.num(l.pm, 0) : '—'}–${l.ps != null ? F.num(l.ps, 0) : '—'}</span>
+        </div>
+        <div class="ppts"><b>${l.v ?? '—'}–${l.d ?? '—'}</b><span>${l.dif != null ? (l.dif > 0 ? '+' : '') + F.num(l.dif, 0) : '—'} DIF</span></div>
+      </li>`).join('')}</ul><div class="tw tw-alt"><table>
         <thead><tr>
           <th scope="col">#</th><th scope="col" class="name">Equipa</th>
           <th scope="col">J</th><th scope="col">V</th><th scope="col">D</th>
