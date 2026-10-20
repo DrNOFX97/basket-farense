@@ -51,6 +51,15 @@ function href(epocaId, equipaId, vista = 'resumo', param = null) {
   return `#/${epocaId}/${equipaId}/${vista}${param ? `/${param}` : ''}`;
 }
 
+// A zona #/api não tem época nem equipa na rota. Para navegar a partir dela,
+// usa a época de arranque e a primeira equipa.
+function contexto() {
+  const p = parse();
+  const ep = epoca(p.epoca) || epoca(arranque().epoca);
+  const t = (p.equipa && equipa(ep.id, p.equipa)) || ep.equipas[0];
+  return { p, ep, t };
+}
+
 // ---------------------------------------------------------------- sidebar --
 function gruposDe(ep) {
   const seniores = ep.equipas.filter((t) => t.escalao === 'Seniores');
@@ -310,8 +319,8 @@ function ligarSheet() {
     if (e.target === sheet) { fechar(); return; }
     const b = e.target.closest('[data-equipa]');
     if (!b) return;
-    const p = parse();
-    location.hash = href(p.epoca, b.dataset.equipa, 'resumo');
+    const { ep } = contexto();
+    location.hash = href(ep.id, b.dataset.equipa, 'resumo');
     fechar();
   });
 
@@ -408,15 +417,14 @@ function ligarAtalhos() {
     if (e.metaKey || e.ctrlKey || e.altKey || ajuda.open) return;
     if (e.target.closest('input, select, textarea, [contenteditable]')) return;
 
-    const p = parse();
-    const ep = epoca(p.epoca);
+    const { p, ep, t } = contexto();
     if (!ep) return;
 
     if (aguardaG) {
       aguardaG = false;
       clearTimeout(timer);
       const vista = SECCAO_POR_TECLA[e.key];
-      if (vista) { e.preventDefault(); location.hash = href(ep.id, p.equipa, vista); }
+      if (vista) { e.preventDefault(); location.hash = href(ep.id, t.id, vista); }
       return;
     }
 
@@ -429,7 +437,7 @@ function ligarAtalhos() {
     } else if (e.key === 't') {
       alternarTema();
     } else if (e.key === '[' || e.key === ']') {
-      const i = ep.equipas.findIndex((x) => x.id === p.equipa);
+      const i = ep.equipas.findIndex((x) => x.id === t.id);
       const n = ep.equipas.length;
       const alvo = ep.equipas[(i + (e.key === ']' ? 1 : -1) + n) % n];
       location.hash = href(ep.id, alvo.id, p.vista === 'jogo' ? 'resumo' : p.vista);
@@ -445,8 +453,8 @@ function ligarShell() {
   document.getElementById('nav').addEventListener('click', (e) => {
     const b = e.target.closest('[data-equipa]');
     if (!b) return;
-    const p = parse();
-    location.hash = href(p.epoca, b.dataset.equipa, 'resumo');
+    const { ep } = contexto();
+    location.hash = href(ep.id, b.dataset.equipa, 'resumo');
   });
 
   document.getElementById('season').addEventListener('click', (e) => {
