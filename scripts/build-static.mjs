@@ -55,6 +55,42 @@ fs.copyFileSync(DADOS, path.join(DIST, 'data', 'farense.json'));
 
 const dados = JSON.parse(fs.readFileSync(DADOS, 'utf8'));
 
+// API pública só de leitura para outras apps (ex.: a app iOS). Os ficheiros são
+// estáticos e versionados em /api/v1/, por isso o formato só muda com um /v2/.
+//   /api/v1/index.json                   épocas e equipas (sem jogos)
+//   /api/v1/<época>/<equipa>.json        equipa completa: jogos, plantel, classificação
+{
+  const base = path.join(DIST, 'api', 'v1');
+  const escrever = (rel, obj) => {
+    const destino = path.join(base, rel);
+    fs.mkdirSync(path.dirname(destino), { recursive: true });
+    fs.writeFileSync(destino, JSON.stringify(obj));
+  };
+  escrever('index.json', {
+    versao: 1,
+    gerado: dados.gerado,
+    fonte: dados.fonte,
+    epocas: dados.epocas.map((e) => ({
+      id: e.id,
+      nome: e.nome,
+      equipas: e.equipas.map((t) => ({
+        id: t.id,
+        nome: t.nome,
+        nomeCurto: t.nomeCurto,
+        escalao: t.escalao,
+        genero: t.genero,
+        competicao: t.competicao,
+        logo: t.logo,
+        jogos: t.jogos.length,
+        url: `/api/v1/${e.id}/${t.id}.json`,
+      })),
+    })),
+  });
+  for (const e of dados.epocas) {
+    for (const t of e.equipas) escrever(`${e.id}/${t.id}.json`, { versao: 1, gerado: dados.gerado, ...t });
+  }
+}
+
 const vistos = new Set();
 const equipas = [];
 for (const epoca of dados.epocas) {

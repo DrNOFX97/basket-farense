@@ -27,6 +27,14 @@
   [headers.values]
     Cache-Control = "public, max-age=600"
 
+# API pública de leitura (app iOS e outros clientes). CORS aberto: são dados
+# públicos e não há cookies nem credenciais.
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=300"
+
 [[headers]]
   for = "/*"
   [headers.values]

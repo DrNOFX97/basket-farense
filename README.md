@@ -155,6 +155,24 @@ node scripts/check-live.mjs <email> <password>
 
 ---
 
+## API para outras apps
+
+O build gera uma API JSON só de leitura em `/api/v1/` (ficheiros estáticos, CORS
+aberto, cache de 5 minutos). Base: <https://basket-farense.netlify.app>.
+
+| Endpoint | Conteúdo |
+|---|---|
+| `/api/v1/index.json` | épocas e equipas (sem jogos), com o `url` de cada equipa |
+| `/api/v1/<época>/<equipa>.json` | equipa completa: resumo, classificação, plantel, jogos (parciais, boxscore, acções) |
+| `/api/live` | estado ao vivo (já existente) |
+
+Exemplo: `/api/v1/2026-2027/seniores-m.json`. Os dados são actualizados quando
+corres `python3 build_data.py` e voltas a publicar. O campo `gerado` diz quando
+foi a última extracção. Notas: as datas vêm com `Z` mas são hora local (não
+converter fusos) e não há lançamentos falhados nem ressaltos (ver acima).
+
+---
+
 ## Publicação
 
 - Repositório: <https://github.com/DrNOFX97/basket-farense>
