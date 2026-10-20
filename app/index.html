@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Farense Basket</title>
+<meta name="description" content="Calendário, resultados, classificações e estatísticas de todos os escalões de basquetebol do SC Farense.">
+<meta name="theme-color" content="#08090B">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2308090B'/><text x='16' y='22' font-family='system-ui' font-size='13' font-weight='700' fill='%23fff' text-anchor='middle'>SCF</text></svg>">
+</head>
+<body>
+<a class="skip" href="#conteudo">Saltar para o conteúdo</a>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegação">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">SCF</div>
+      <div class="brand-txt">
+        <strong>SC Farense</strong>
+        <span>Basquetebol</span>
+      </div>
+    </div>
+
+    <div class="season" id="season" role="group" aria-label="Época"></div>
+
+    <nav class="nav" id="nav" aria-label="Escalões"></nav>
+
+    <div class="side-foot">
+      <a class="live-link" href="#" id="live-link">
+        <span class="live-dot" id="live-dot" hidden></span>
+        <span id="live-txt">Ao vivo</span>
+      </a>
+      <p class="foot-note" id="foot-note"></p>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="brand brand-sm">
+        <div class="brand-mark" aria-hidden="true">SCF</div>
+        <div class="brand-txt"><strong>Farense</strong><span>Basket</span></div>
+      </div>
+      <div class="mobile-controls">
+        <label class="sr-only" for="sel-equipa">Escalão</label>
+        <select id="sel-equipa" class="select"></select>
+        <label class="sr-only" for="sel-epoca">Época</label>
+        <select id="sel-epoca" class="select select-sm"></select>
+      </div>
+    </header>
+
+    <main class="content" id="conteudo" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="erro-fatal" id="erro-fatal" hidden>
+  <h1>Não foi possível carregar os dados</h1>
+  <p id="erro-msg"></p>
+  <p class="mut">Verifica se o servidor está a correr e se <code>data/farense.json</code> existe.</p>
+</div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

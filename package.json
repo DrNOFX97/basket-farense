@@ -1,0 +1,10 @@
+{
+  "name": "farense-basket",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Web app com o calendário, resultados e estatísticas de basquetebol do SC Farense (dados NBN23).",
+  "scripts": {
+    "check": "node scripts/check-views.mjs"
+  }
+}
