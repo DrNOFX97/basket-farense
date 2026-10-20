@@ -605,7 +605,15 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 
 /* ---------------------------------------------------------------- mobile */
-@media (max-width: 1023px) {
+/* Tablet (768–1023px): sidebar mais estreita ao lado do conteúdo; os
+   separadores ficam no topo. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root { --sidebar: 232px; }
+  .content { padding: 22px 24px 64px; }
+}
+
+/* Telemóvel (<768px): sem sidebar; barra superior + Tab Bar inferior. */
+@media (max-width: 767px) {
   .app { grid-template-columns: minmax(0, 1fr); }
   .sidebar { display: none; }
 
@@ -629,7 +637,9 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
   .mobile-controls .select-sm { flex: 0 0 104px; width: 104px; }
 
   .content { padding: 16px 14px 84px; max-width: none; }
+}
 
+@media (max-width: 1023px) {
   .head h1 { font-size: 22px; letter-spacing: -.4px; }
   .chips { gap: 8px; }
   .chip { padding: 8px 11px; min-width: 0; flex: 1 1 30%; }
