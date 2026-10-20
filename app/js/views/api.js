@@ -82,6 +82,11 @@ Num jogo com "detalhe": true há ainda: lideranca {maiorCasa, maiorFora, empates
 Implementa o cliente (modelos, pedido autenticado, tratamento de erros, cache local) e o que eu pedir a seguir na app. Antes de escrever código, diz-me em que ficheiro vais pôr a chave e confirma que não vai para o controlo de versões.`;
 }
 
+const exemploCurl = (chave, base) => `curl -H "X-API-Key: ${chave}" \\\n  ${base}/api/v1/index`;
+
+const AVISO_MODELO = `Cola isto no Claude Code, Cursor ou ChatGPT a trabalhar na outra app. Troca ${MARCADOR_CHAVE} pela tua chave, ou gera uma chave acima: o exemplo e o prompt passam a usá-la, só até saíres desta página.`;
+const AVISO_COM_CHAVE = 'Já leva a chave que acabaste de gerar, só até saíres desta página. Cola isto no Claude Code, Cursor ou ChatGPT a trabalhar na outra app.';
+
 export default {
   render() {
     const lista = lerLista();
@@ -115,17 +120,14 @@ export default {
         <div class="card-b api-doc">
           <p>Envia a chave no cabeçalho <code>X-API-Key</code> (ou <code>Authorization: Bearer …</code>).
             Nunca a ponhas no endereço.</p>
-          <pre class="api-code"><code>curl -H "X-API-Key: a_tua_chave" \\
-  ${esc(base)}/api/v1/index</code></pre>
+          <pre class="api-code"><code id="api-curl">${esc(exemploCurl(MARCADOR_CHAVE, base))}</code></pre>
           <dl class="api-eps">
             ${ENDPOINTS.map(([e, d]) => `<dt><code>${esc(e)}</code></dt><dd>${esc(d)}</dd>`).join('')}
           </dl>
           <details class="api-prompt">
             <summary>Prompt para uma LLM (usar estes dados noutra app)</summary>
-            <p class="mut">Cola isto no Claude Code, Cursor ou ChatGPT a trabalhar na outra app. Troca
-              <code>${MARCADOR_CHAVE.replace('<', '&lt;').replace('>', '&gt;')}</code> pela tua chave, ou gera uma
-              chave acima e usa o botão "Copiar prompt com a chave".</p>
-            <pre class="api-code"><code>${esc(promptLlm(MARCADOR_CHAVE, base))}</code></pre>
+            <p class="mut" id="api-aviso-modelo">${esc(AVISO_MODELO)}</p>
+            <pre class="api-code"><code id="api-prompt-txt">${esc(promptLlm(MARCADOR_CHAVE, base))}</code></pre>
             <button type="button" class="api-btn" id="api-copiar-modelo">Copiar prompt</button>
           </details>
           <p class="mut">Sem chave, ou com uma chave revogada, a resposta é 401. As datas terminam em
@@ -160,9 +162,24 @@ export default {
       setTimeout(() => { btn.textContent = rotulo; }, 2500);
     };
 
+    // "Como usar" mostra a chave verdadeira só enquanto ela existe nesta página,
+    // isto é, desde que é gerada até sair da página ou revogá-la.
+    let chaveAtual = null;
+    let idNovo = null;
+    const base = location.origin;
+    const curlTxt = root.querySelector('#api-curl');
+    const promptTxt = root.querySelector('#api-prompt-txt');
+    const avisoModelo = root.querySelector('#api-aviso-modelo');
+    const atualizarExemplos = () => {
+      const chave = chaveAtual || MARCADOR_CHAVE;
+      curlTxt.textContent = exemploCurl(chave, base);
+      promptTxt.textContent = promptLlm(chave, base);
+      avisoModelo.textContent = chaveAtual ? AVISO_COM_CHAVE : AVISO_MODELO;
+    };
+
     const modelo = root.querySelector('#api-copiar-modelo');
     modelo.addEventListener('click', () => copiarTexto(
-      modelo, promptLlm(MARCADOR_CHAVE, location.origin), root.querySelector('.api-prompt pre code'), 'Copiar prompt'));
+      modelo, promptTxt.textContent, promptTxt, 'Copiar prompt'));
 
     const mostrarErro = (msg) => { erro.textContent = msg; erro.hidden = !msg; };
     const atualizarVazio = () => { vazio.hidden = lerLista().length > 0; };
@@ -187,6 +204,9 @@ export default {
         nome.value = '';
 
         // A chave só existe aqui, na memória desta página.
+        chaveAtual = d.chave;
+        idNovo = d.id;
+        atualizarExemplos();
         nova.innerHTML = `<div class="api-nova" role="status">
           <b>Copia a chave agora — não voltará a ser mostrada.</b>
           <div class="api-nova-linha">
@@ -230,7 +250,12 @@ export default {
         if (!r.ok && r.status !== 404) throw new Error(`Erro ${r.status}`);
         gravarLista(lerLista().filter((k) => k.id !== id));
         b.closest('.api-chave').remove();
-        nova.innerHTML = '';
+        if (id === idNovo) {
+          chaveAtual = null;
+          idNovo = null;
+          nova.innerHTML = '';
+          atualizarExemplos();
+        }
         atualizarVazio();
       } catch (err) {
         b.disabled = false;
