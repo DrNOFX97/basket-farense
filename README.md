@@ -113,6 +113,7 @@ data/farense.json     dataset da aplicação
 cache/                respostas cruas da API (não versionado)
 app/
   index.html          shell: sidebar, topbar mobile, contentor
+  img/emblema.png     emblema do clube (marca, favicon e og:image)
   css/app.css         sistema de design completo (tokens, layout, componentes)
   js/
     app.js            routing por hash, shell, sidebar, selects mobile
