@@ -128,8 +128,10 @@ function desenharMobile(ep, t) {
   if (formacao.length) html += `<h3>Formação</h3><ul>${formacao.map(item).join('')}</ul>`;
 
   document.getElementById('sheet-lista').innerHTML = html;
-  document.getElementById('btn-equipa-txt').textContent = t.nomeCurto
-    + (contagem[t.nomeCurto] > 1 ? ` ${t.variante || ''}` : '');
+  const nomeAtual = t.nomeCurto + (contagem[t.nomeCurto] > 1 ? ` ${t.variante || ''}` : '');
+  document.getElementById('btn-equipa-txt').textContent = nomeAtual;
+  // O nome acessível tem de conter o texto visível.
+  document.getElementById('btn-equipa').setAttribute('aria-label', `${nomeAtual}, escolher escalão`);
 
   const curto = (nome) => nome.split('/').map((x) => x.slice(2)).join('/');
   document.getElementById('sel-epoca').innerHTML = epocas().map((e) => `

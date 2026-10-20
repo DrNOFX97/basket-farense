@@ -22,6 +22,19 @@
 <meta property="og:url" content="https://basket-farense.netlify.app/">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="/css/app.css">
+<!-- Pré-carrega módulos e dados em paralelo; sem isto o browser só descobre
+     data.js e as vistas depois de ler app.js, e só então pede o JSON. -->
+<link rel="modulepreload" href="/js/app.js">
+<link rel="modulepreload" href="/js/data.js">
+<link rel="modulepreload" href="/js/format.js">
+<link rel="modulepreload" href="/js/ui.js">
+<link rel="modulepreload" href="/js/views/resumo.js">
+<link rel="modulepreload" href="/js/views/jogos.js">
+<link rel="modulepreload" href="/js/views/jogo.js">
+<link rel="modulepreload" href="/js/views/classificacao.js">
+<link rel="modulepreload" href="/js/views/plantel.js">
+<link rel="modulepreload" href="/js/views/aovivo.js">
+<link rel="preload" href="/data/farense.json" as="fetch" crossorigin="anonymous">
 <link rel="icon" type="image/png" sizes="any" href="/img/emblema.png">
 <link rel="apple-touch-icon" href="/img/emblema.png">
 </head>
