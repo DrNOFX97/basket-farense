@@ -32,7 +32,7 @@ def ler_json():
     c = _cache.get('json')
     if c and c[0] == m:
         return c[1]
-    dados = json.load(open(DATA))
+    dados = json.load(open(DATA, encoding='utf-8'))
     _cache['json'] = (m, dados)
     return dados
 

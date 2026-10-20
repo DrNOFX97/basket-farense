@@ -265,6 +265,7 @@ function ligarShell() {
   } catch (e) {
     document.getElementById('erro-fatal').hidden = false;
     document.getElementById('erro-msg').textContent = e.message;
+    document.getElementById('erro-retry').onclick = () => location.reload();
     return;
   }
 

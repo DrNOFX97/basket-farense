@@ -45,7 +45,7 @@ Q_MATCH = """query L($projectKey: String!, $fid: String!) {
 
 
 def equipas():
-    d = json.load(open(DATA))
+    d = json.load(open(DATA, encoding='utf-8'))
     vistas, out = set(), []
     for ep in d['epocas']:
         for t in ep['equipas']:

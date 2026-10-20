@@ -479,6 +479,18 @@ thead th.act .arrow { opacity: 1; color: #fff; }
 .erro-fatal { max-width: 520px; margin: 18vh auto; padding: 0 24px; }
 .erro-fatal h1 { font-size: 20px; margin-bottom: 10px; }
 .erro-fatal code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.btn {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--accent);
+  color: var(--bg);
+  border: 0;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 /* ---------------------------------------------------------------- select */
 .select {

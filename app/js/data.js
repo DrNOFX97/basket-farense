@@ -3,10 +3,30 @@
 
 let DADOS = null;
 
+// Uma segunda tentativa cobre falhas de rede transitórias; o erro final diz
+// qual foi a causa (rede, resposta do servidor ou JSON inválido).
+async function pedir() {
+  let r;
+  try {
+    r = await fetch('/data/farense.json', { cache: 'no-cache' });
+  } catch {
+    throw new Error('não foi possível contactar o servidor (verifica a ligação à Internet)');
+  }
+  if (!r.ok) throw new Error(`o servidor respondeu ${r.status} ao pedir data/farense.json`);
+  try {
+    return await r.json();
+  } catch {
+    throw new Error('o ficheiro de dados está corrompido (JSON inválido)');
+  }
+}
+
 export async function carregar() {
-  const r = await fetch('/data/farense.json', { cache: 'no-cache' });
-  if (!r.ok) throw new Error(`o servidor respondeu ${r.status}`);
-  DADOS = await r.json();
+  try {
+    DADOS = await pedir();
+  } catch {
+    await new Promise((res) => setTimeout(res, 800));
+    DADOS = await pedir();
+  }
   if (!DADOS.epocas || !DADOS.epocas.length) throw new Error('o ficheiro de dados está vazio');
   return DADOS;
 }

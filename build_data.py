@@ -27,7 +27,7 @@ SEM_CACHE = '--sem-cache' in sys.argv
 
 c = Swish()
 
-SCH = json.load(open(os.path.join(BASE, '.schema.json')))
+SCH = json.load(open(os.path.join(BASE, '.schema.json'), encoding='utf-8'))
 TYPES = {t['name']: t for t in SCH['data']['__schema']['types'] if t.get('name')}
 SCALARS = {'String', 'Int', 'Float', 'Boolean', 'ID', 'Date', 'DateTime', 'JSON'}
 BROKEN = {'playerFid', 'teamFid', 'competitionFid', 'projectKey', 'matchFid'}
@@ -53,7 +53,7 @@ STAND_M = metrics(base_type(next(f for f in TYPES['Standing']['fields']
 def gql(key, query, variables=None):
     path = os.path.join(CACHE, key + '.json')
     if os.path.exists(path) and not SEM_CACHE:
-        return json.load(open(path))
+        return json.load(open(path, encoding='utf-8'))
     last = {}
     for _ in range(3):
         st, d = c.gql(query, variables)
@@ -63,7 +63,7 @@ def gql(key, query, variables=None):
         time.sleep(2)
     if d.get('errors'):
         print(f'    ! {key}: {d["errors"][0]["message"][:90]}')
-    json.dump(d, open(path, 'w'), ensure_ascii=False)
+    json.dump(d, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
     return d
 
 
@@ -384,7 +384,7 @@ def main():
     dados = {'gerado': time.strftime('%Y-%m-%d %H:%M'),
              'fonte': 'API NBN23 (Swish)',
              'epocas': epocas}
-    json.dump(dados, open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(dados, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     kb = os.path.getsize(OUT) / 1024
     nj = sum(len(t['jogos']) for e in epocas for t in e['equipas'])
     nd = sum(1 for e in epocas for t in e['equipas'] for j in t['jogos'] if j['detalhe'])
