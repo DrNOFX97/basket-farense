@@ -23,6 +23,15 @@ const TABS = [
   ['ao-vivo', 'Ao vivo'],
 ];
 
+// Ícones da barra de separadores (mobile), 24×24, traço.
+const ICONES = {
+  resumo: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  jogos: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  classificacao: '<path d="M4 20V11M12 20V4M20 20v-6"/>',
+  plantel: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2.1.7 3.5 2.6 3.5 5.6"/>',
+  'ao-vivo': '<circle cx="12" cy="12" r="2.5"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.6 4.6a10.5 10.5 0 0 0 0 14.8M19.4 4.6a10.5 10.5 0 0 1 0 14.8"/>',
+};
+
 let limpar = null;
 
 // ------------------------------------------------------------------ rotas --
@@ -140,6 +149,17 @@ function desenharTabs(ep, t, vista) {
   </nav>`;
 }
 
+// Barra inferior (só visível em mobile): os mesmos destinos dos separadores.
+function desenharTabBar(ep, t, vista) {
+  const atual = vista === 'jogo' ? 'jogos' : vista;
+  document.getElementById('tabbar').innerHTML = TABS.map(([k, nome]) => `
+    <a class="tb ${k === atual ? 'on' : ''}" href="${esc(href(ep.id, t.id, k))}"
+      ${k === atual ? 'aria-current="page"' : ''}>
+      <svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[k]}</svg>
+      <span>${nome === 'Classificação' ? 'Tabela' : nome}</span>
+    </a>`).join('');
+}
+
 // ------------------------------------------------------------------ render --
 function render(ep, t, vista, param) {
   if (limpar) {
@@ -162,6 +182,7 @@ function render(ep, t, vista, param) {
 
   desenharSidebar(ep, t);
   desenharMobile(ep, t);
+  desenharTabBar(ep, t, vista);
 
   document.title = `${t.nomeCurto} · ${t.competicao} — Farense Basket`;
   window.scrollTo(0, 0);
