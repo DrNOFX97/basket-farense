@@ -44,8 +44,8 @@ Cinco vistas por escalão, com URL própria (`#/época/escalão/vista`):
   entre equipas, boxscore das duas equipas e play-by-play com marcador
   corrido.
 - **Classificação** — tabela do grupo, com a linha do Farense destacada.
-- **Plantel** — estatísticas agregadas por jogador, com ordenação por qualquer
-  coluna.
+- **Plantel** — estatísticas agregadas por jogador, com caras da API e ordenação
+  por qualquer coluna.
 - **Ao vivo** — marcador e últimas acções do jogo a decorrer, com actualização
   automática; fora de jogos, mostra os próximos encontros.
 
@@ -64,6 +64,10 @@ python3 build_data.py
 Lê a API, normaliza tudo e reescreve `data/farense.json`. As respostas cruas
 ficam em `cache/`, por isso uma segunda execução sem alterações é quase
 instantânea e não volta a bater na API.
+
+As fotos dos jogadores vêm de `Player.photo`. A primeira execução depois desta
+alteração refaz o cache dos jogos (`match_foto_*`) para as trazer; quem não tiver
+foto aparece com as iniciais na interface.
 
 Credenciais, por ordem de preferência:
 

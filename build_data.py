@@ -44,6 +44,12 @@ def metrics(tname):
             if base_type(f['type']) in SCALARS and f['name'] not in BROKEN]
 
 
+def limpar_foto(v):
+    """A API usa 'N/A' quando o jogador nao tem fotografia."""
+    v = str(v or '').strip()
+    return None if not v or v.upper() in ('N/A', 'NA', 'NULL') else v
+
+
 BOX_M = metrics('BoxscoreStats')
 TEAM_M = metrics('BoxscoreCompetitionTeamStats')
 STAND_M = metrics(base_type(next(f for f in TYPES['Standing']['fields']
@@ -97,8 +103,8 @@ Q_MATCH = """query M($projectKey: String!, $fid: String!) {
              partials { period homeScore awayScore } }
     stats { biggestLead { homeTeam awayTeam } timesTied leadChanges }
     boxscore {
-      homeTeam { players { player { fid name lastName number } stats { %s } } }
-      awayTeam { players { player { fid name lastName number } stats { %s } } } }
+      homeTeam { players { player { fid name lastName number photo } stats { %s } } }
+      awayTeam { players { player { fid name lastName number photo } stats { %s } } } }
     actions { period time actor { fid type } code subCode value result teamFid }
   } }""" % (' '.join(BOX_M), ' '.join(BOX_M))
 Q_STAND = """query S($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
@@ -177,7 +183,8 @@ def limpar_stats(d):
 
 # ------------------------------------------------------------------ pull -----
 def pull_match(pk, fid):
-    d = gql(f'match_{fid}', Q_MATCH, {'projectKey': pk, 'fid': fid})
+    # Chave versionada: os caches antigos dos jogos nao tinham o campo photo.
+    d = gql(f'match_foto_{fid}', Q_MATCH, {'projectKey': pk, 'fid': fid})
     m = ((d.get('data') or {}).get('matchBy') or [None])[0]
     if not m:
         return None
@@ -203,6 +210,7 @@ def pull_match(pk, fid):
             out['jogadores'][side].append({
                 'fid': p.get('fid'), 'num': p.get('number'),
                 'nome': ((p.get('name') or '') + ' ' + (p.get('lastName') or '')).strip(),
+                'foto': limpar_foto(p.get('photo')),
                 'min': s.get('timePlayed'), 'pts': s.get('points'),
                 'c2': s.get('inArcThrowsMade'), 'f2': s.get('inArcThrowsFailed'),
                 'c3': s.get('outArcThrowsMade'), 'f3': s.get('outArcThrowsFailed'),
@@ -299,7 +307,7 @@ def pull_team(t, epoca_id):
     plantel = [{'fid': p.get('fid'),
                 'nome': ((p.get('name') or '') + ' ' + (p.get('lastName') or '')).strip(),
                 'num': p.get('number'), 'capitao': bool(p.get('captain')),
-                'foto': p.get('photo')}
+                'foto': limpar_foto(p.get('photo'))}
                for p in ((d.get('data') or {}).get('playersByTeam') or [])]
     if not plantel:
         # a API devolve playersByTeam vazio nesta epoca; reconstroi pelos boxscores
@@ -311,8 +319,20 @@ def pull_team(t, epoca_id):
             for p in (j.get('jogadores') or {}).get(lado, []):
                 if p['fid'] not in vistos:
                     vistos[p['fid']] = {'fid': p['fid'], 'nome': p['nome'],
-                                        'num': p['num'], 'capitao': False, 'foto': None}
+                                        'num': p['num'], 'capitao': False,
+                                        'foto': p.get('foto')}
         plantel = sorted(vistos.values(), key=lambda p: str(p['num'] or '99'))
+
+    # Se o plantel veio da API mas alguma foto faltava, aproveita as dos boxscores.
+    fotos = {}
+    for j in jogos:
+        for lado in ('casa', 'fora'):
+            for p in (j.get('jogadores') or {}).get(lado, []):
+                if p.get('foto') and not fotos.get(p['fid']):
+                    fotos[p['fid']] = p['foto']
+    for p in plantel:
+        if not p.get('foto'):
+            p['foto'] = fotos.get(p['fid'])
 
     realizados = [j for j in jogos if j['jogado']]
     v = sum(1 for j in realizados if j['resultado'] == 'V')

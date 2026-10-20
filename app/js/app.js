@@ -2,7 +2,7 @@ import {
   carregar, dados, epocas, epoca, equipa, arranque, posicao,
 } from './data.js';
 import * as F from './format.js';
-import { esc, chip } from './ui.js';
+import { esc } from './ui.js';
 
 import resumo from './views/resumo.js';
 import jogos from './views/jogos.js';
@@ -150,24 +150,45 @@ function desenharMobile(ep, t) {
 }
 
 // ---------------------------------------------------------------- cabeçalho --
+// Par marcados/sofridos: o primeiro valor fica em destaque e o segundo mais
+// discreto, para se perceber de imediato qual é qual.
+function parTopo(marcados, sofridos, dec = 0) {
+  if (marcados == null || sofridos == null) return '<span class="mut">—</span>';
+  return `<b>${F.num(marcados, dec)}</b><i>/</i><span>${F.num(sofridos, dec)}</span>`;
+}
+
+function statTopo(rotulo, valor, nota = '') {
+  return `<div class="hstat">
+    <span class="k">${esc(rotulo)}</span>
+    <span class="v">${valor}</span>
+    ${nota ? `<span class="hint">${esc(nota)}</span>` : ''}
+  </div>`;
+}
+
 function desenharHead(ep, t, vista) {
   const r = t.resumo || {};
+  const a = t.agregado || {};
   const pos = posicao(t);
   const compacto = vista === 'jogo';
+  const jogos = a.games ?? r.realizados ?? 0;
+  const nota = 'marcados / sofridos';
 
-  const chips = compacto ? '' : `<div class="chips">
-    ${chip('Jogos', r.jogos ?? '—')}
-    ${chip('V-D', `${r.v ?? 0}-${r.d ?? 0}`)}
-    ${pos ? chip('Posição', `${esc(pos)}º`) : ''}
-    ${r.media != null ? chip('Marcados', F.num(r.media, 1)) : ''}
-    ${r.mediaSofrida != null ? chip('Sofridos', F.num(r.mediaSofrida, 1)) : ''}
+  const stats = compacto ? '' : `<div class="hstats" role="group" aria-label="Resumo da época">
+    ${statTopo('Posição', pos ? `${esc(pos)}.º` : '<span class="mut">—</span>')}
+    ${statTopo('V-D', `${r.v ?? 0}-${r.d ?? 0}`)}
+    ${statTopo('Total', jogos
+      ? parTopo(a.points ?? r.pontos, a.pointsConceded ?? r.sofridos)
+      : '<span class="mut">—</span>', jogos ? nota : '')}
+    ${statTopo('Média', jogos
+      ? parTopo(a.pointsAVG ?? r.media, a.pointsConcededAVG ?? r.mediaSofrida, 1)
+      : '<span class="mut">—</span>', jogos ? nota : '')}
   </div>`;
 
   return `<header class="head">
     <div class="eyebrow">${esc(t.epoca)}${t.projeto ? ' · ' + esc(t.projeto) : ''}</div>
     <h1>${esc(t.nomeCurto)}</h1>
     <p class="comp">${esc(t.competicao)}</p>
-    ${chips}
+    ${stats}
   </header>`;
 }
 
@@ -448,6 +469,14 @@ function ligarAtalhos() {
 function ligarShell() {
   ligarAtalhos();
   ligarGestos();
+
+  // Se um logo ou uma cara da API falhar, remove o <img> em vez de deixar o
+  // ícone quebrado. Nos avatares ficam as iniciais por baixo.
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (img instanceof HTMLImageElement
+        && (img.classList.contains('tlogo') || img.closest('.pavatar'))) img.remove();
+  }, true);
   document.querySelectorAll('[data-tema-toggle]').forEach((b) => b.addEventListener('click', alternarTema));
 
   document.getElementById('nav').addEventListener('click', (e) => {

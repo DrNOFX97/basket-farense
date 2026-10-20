@@ -94,24 +94,27 @@ export function statsPlantel(t) {
     for (const p of (j.jogadores && j.jogadores[lado]) || []) {
       let a = mapa.get(p.fid);
       if (!a) {
-        a = { fid: p.fid, nome: p.nome, num: p.num, j: 0 };
+        a = { fid: p.fid, nome: p.nome, num: p.num, foto: p.foto || null, j: 0 };
         for (const k of campos) a[k] = 0;
         mapa.set(p.fid, a);
       }
       a.j += 1;
       for (const k of campos) a[k] += p[k] || 0;
       if (p.num && !a.num) a.num = p.num;
+      if (p.foto && !a.foto) a.foto = p.foto;
     }
   }
 
   // Junta quem está no plantel mas ainda não jogou.
   for (const p of t.plantel || []) {
     if (!mapa.has(p.fid)) {
-      const a = { fid: p.fid, nome: p.nome, num: p.num, j: 0 };
+      const a = { fid: p.fid, nome: p.nome, num: p.num, foto: p.foto || null, j: 0 };
       for (const k of campos) a[k] = 0;
       mapa.set(p.fid, a);
-    } else if (!mapa.get(p.fid).nome) {
-      mapa.get(p.fid).nome = p.nome;
+    } else {
+      const a = mapa.get(p.fid);
+      if (!a.nome) a.nome = p.nome;
+      if (!a.foto) a.foto = p.foto || null;
     }
   }
 
@@ -183,13 +186,38 @@ export function nomesJogo(j) {
   return mapa;
 }
 
+// Logos por fid: o próprio clube e os adversários que constam da classificação.
+// É a única fonte de logos no JSON; os jogos só trazem nomes e fids.
+export function logosEquipa(t) {
+  const mapa = new Map();
+  if (t.logo) mapa.set(String(t.teamFid), t.logo);
+  for (const g of t.classificacao || []) {
+    for (const l of g.linhas || []) {
+      if (l.logo) mapa.set(String(l.fid), l.logo);
+    }
+  }
+  return mapa;
+}
+
+// Pontos de classificação: 2 por vitória e 1 por derrota (regra da FPB).
+// A fonte não publica este campo, por isso é derivado do registo.
+function pontosClassificacao(l) {
+  if (l.pts != null) return l.pts;
+  if (l.v == null && l.d == null) return null;
+  return 2 * (l.v || 0) + (l.d || 0);
+}
+
 // Classificação: devolve o grupo e as linhas, com a equipa marcada.
 export function classificacao(t) {
   const g = (t.classificacao || [])[0];
   if (!g) return null;
   return {
     grupo: g.grupo,
-    linhas: (g.linhas || []).map((l) => ({ ...l, eu: String(l.fid) === String(t.teamFid) })),
+    linhas: (g.linhas || []).map((l) => ({
+      ...l,
+      eu: String(l.fid) === String(t.teamFid),
+      pts: pontosClassificacao(l),
+    })),
   };
 }
 

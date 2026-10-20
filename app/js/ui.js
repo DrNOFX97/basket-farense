@@ -12,6 +12,27 @@ export function pill(res) {
   return '<span class="pill pill-n" title="Por jogar">—</span>';
 }
 
+// Logo de clube. Decorativo: o nome da equipa aparece sempre ao lado.
+export function logo(src, classe = '') {
+  if (!src) return '';
+  return `<img class="tlogo${classe ? ` ${classe}` : ''}" src="${esc(src)}" alt="" width="20" height="20" loading="lazy" decoding="async">`;
+}
+
+// Avatar de jogador. A foto cobre as iniciais; se falhar, o handler global
+// remove o <img> e ficam as iniciais como fallback.
+export function avatar(src, nome, classe = '') {
+  const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+  let ini = '?';
+  if (partes.length === 1) ini = partes[0].slice(0, 2);
+  else if (partes.length > 1) ini = partes[0][0] + partes[partes.length - 1][0];
+  const raw = String(src || '').trim();
+  const url = raw && !['N/A', 'NA', 'NULL'].includes(raw.toUpperCase()) ? raw : '';
+  return `<span class="pavatar${classe ? ` ${classe}` : ''}" aria-hidden="true">
+    <span class="pavatar-fb">${esc(ini.toUpperCase())}</span>
+    ${url ? `<img src="${esc(url)}" alt="" loading="lazy" decoding="async">` : ''}
+  </span>`;
+}
+
 export function vazio(titulo, texto) {
   return `<div class="empty"><b>${esc(titulo)}</b>${texto ? esc(texto) : ''}</div>`;
 }
@@ -21,10 +42,6 @@ export function card(titulo, corpo, lado = '') {
     ${titulo ? `<div class="card-h"><h2>${esc(titulo)}</h2>${lado}</div>` : ''}
     ${corpo}
   </section>`;
-}
-
-export function chip(k, v) {
-  return `<div class="chip"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`;
 }
 
 export function registo(v, d) {

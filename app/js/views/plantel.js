@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import { esc, card, vazio } from '../ui.js';
+import { esc, card, vazio, avatar } from '../ui.js';
 
 let ordem = { k: 'pts', dir: -1 };
 let equipaAtual = null;
@@ -58,6 +58,9 @@ function tabela(t) {
 
   const linhas = arr.map((a) => `<tr>
     ${COLS.map((c) => {
+      if (c.k === 'nome') {
+        return `<td class="name"><span class="pname">${avatar(a.foto, a.nome, 'pavatar-sm')}<span>${esc(a.nome)}</span></span></td>`;
+      }
       const v = c.f ? c.f(a[c.k], a) : (a[c.k] ?? '—');
       return `<td class="${c.cls || ''}">${c.b ? `<b>${v}</b>` : v}</td>`;
     }).join('')}
@@ -100,7 +103,7 @@ function cartoes(arr) {
   return `<ul class="cards-m">${arr.map((a) => `<li class="pcard">
     <span class="pnum">${esc(a.num ?? '—')}</span>
     <div class="pmain">
-      <strong>${esc(a.nome)}</strong>
+      <strong class="pname">${avatar(a.foto, a.nome)}<span>${esc(a.nome)}</span></strong>
       <span>${a.j} J · ${F.mmss(a.mpg)} min · ${F.num(a.ppg, 1)} ppj</span>
       <span class="pdet">2P ${a.c2} · 3P ${a.c3} · LL ${a.cll}/${a.tll}</span>
     </div>

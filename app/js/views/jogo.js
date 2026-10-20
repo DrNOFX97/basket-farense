@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import { esc, card, vazio, linhaCmp } from '../ui.js';
+import { esc, card, vazio, linhaCmp, logo, avatar } from '../ui.js';
 
 const TIPO = {
   FOUL: 'Falta',
@@ -32,6 +32,7 @@ function accaoTexto(a) {
 function placar(t, j) {
   const casaPts = j.jogado ? (j.emCasa ? j.meus : j.adv) : null;
   const foraPts = j.jogado ? (j.emCasa ? j.adv : j.meus) : null;
+  const mapaL = D.logosEquipa(t);
 
   const estado = j.estado === 'LIVE'
     ? '<b>a decorrer</b>'
@@ -43,9 +44,9 @@ function placar(t, j) {
 
   return `<div class="sb">
     <div class="sb-row">
-      <div class="sb-team">${esc(j.casa)}<small>casa</small></div>
+      <div class="sb-team">${logo(mapaL.get(String(j.casaFid)), 'tlogo-lg')}${esc(j.casa)}<small>casa</small></div>
       <div class="sb-sc">${casaPts ?? '—'}<i>–</i>${foraPts ?? '—'}</div>
-      <div class="sb-team f">${esc(j.fora)}<small>fora</small></div>
+      <div class="sb-team f">${logo(mapaL.get(String(j.foraFid)), 'tlogo-lg')}${esc(j.fora)}<small>fora</small></div>
     </div>
     <div class="sb-meta">
       ${esc(F.dataLonga(j.data))}${j.local ? ' · ' + esc(j.local) : ''}
@@ -64,8 +65,8 @@ function tabelaBox(lista) {
   const jogadores = [...lista].sort((a, b) => (b.min || 0) - (a.min || 0) || (b.pts || 0) - (a.pts || 0));
 
   const linhas = jogadores.map((p) => `<tr>
-    <td class="pos">${esc(p.num || '—')}</td>
-    <td class="name">${esc(p.nome)}</td>
+    <td class="pos">${esc(p.num || '-')}</td>
+    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
     <td>${F.mmss(p.min)}</td>
     <td><b>${p.pts ?? 0}</b></td>
     <td>${p.c2}</td>

@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import { esc, pill, card, vazio } from '../ui.js';
+import { esc, pill, card, vazio, logo } from '../ui.js';
 
 let filtro = 'todos';
 let equipaAtual = null;
@@ -13,15 +13,16 @@ const FILTROS = [
   ['futuros', 'Por jogar'],
 ];
 
-function linha(j) {
+function linha(j, mapaL) {
   const adv = j.emCasa ? j.fora : j.casa;
+  const advFid = j.emCasa ? j.foraFid : j.casaFid;
   const marcador = j.jogado
     ? `${j.meus}<span class="dash">–</span>${j.adv}`
     : `<span class="mut">${F.hora(j.data) || '—'}</span>`;
   return `<button class="mrow" data-jogo="${esc(j.fid)}" type="button">
     <div class="mdate"><b>${F.dia(j.data)}</b>${F.mes(j.data)}</div>
     <div class="mopp">
-      <b>${esc(adv)}</b>
+      <b class="mteam">${logo(mapaL.get(String(advFid)), 'tlogo-sm')}<span>${esc(adv)}</span></b>
       <span>${j.emCasa ? 'Casa' : 'Fora'}${j.jornada ? ' · ' + esc(j.jornada) : ''}</span>
     </div>
     <div class="mscore ${j.jogado ? '' : 'dim'}">${marcador}</div>
@@ -45,9 +46,10 @@ function lista(t) {
     grupos.get(k).push(j);
   }
 
+  const mapaL = D.logosEquipa(t);
   return [...grupos.values()].map((g) => `
     <div class="month">${esc(F.nomeMes(g[0].data))}</div>
-    ${g.map(linha).join('')}`).join('');
+    ${g.map((j) => linha(j, mapaL)).join('')}`).join('');
 }
 
 export default {

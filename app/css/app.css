@@ -30,6 +30,7 @@
   --win-dim: rgba(53, 208, 127, .13);
   --loss: #FF5D5D;
   --loss-dim: rgba(255, 93, 93, .13);
+  --gold: #E3B341;
 
   color-scheme: dark;
 
@@ -74,6 +75,7 @@
   --win-dim: rgba(23, 128, 79, .12);
   --loss: #C73B3B;
   --loss-dim: rgba(199, 59, 59, .11);
+  --gold: #B8860B;
 
   color-scheme: light;
 }
@@ -108,6 +110,7 @@
     --win-dim: rgba(23, 128, 79, .12);
     --loss: #C73B3B;
     --loss-dim: rgba(199, 59, 59, .11);
+    --gold: #B8860B;
 
     color-scheme: light;
   }
@@ -352,21 +355,41 @@ kbd {
 }
 .head .comp { color: var(--tx-2); font-size: 13.5px; margin-top: 4px; }
 
-.chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-.chip {
+/* Faixa de números do escalão: posição, registo e pontos (totais e médias).
+   Uma superfície só, dividida por linhas, em vez de chips soltos. */
+.hstats {
+  display: grid;
+  grid-template-columns: .85fr .85fr 1.15fr 1.15fr;
+  margin-top: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 9px 14px;
-  min-width: 92px;
+  overflow: hidden;
 }
-.chip .k {
+.hstat {
+  display: flex; flex-direction: column; min-width: 0;
+  padding: 10px 16px 12px;
+  border-left: 1px solid var(--line);
+}
+.hstat:first-child { border-left: 0; }
+.hstat .k {
   font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase;
   color: var(--tx-3); font-weight: 600;
 }
-.chip .v {
-  font-size: 18px; font-weight: 650; letter-spacing: -.3px;
+.hstat .v {
+  display: flex; align-items: baseline;
+  font-size: 22px; font-weight: 650; letter-spacing: -.4px; line-height: 1.25;
   margin-top: 1px; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hstat .v i {
+  font-style: normal; font-weight: 400; font-size: 15px;
+  color: var(--tx-3); margin: 0 5px;
+}
+.hstat .v span { font-size: 18px; font-weight: 600; color: var(--tx-2); }
+.hstat .hint {
+  font-size: 10px; color: var(--tx-3);
+  letter-spacing: .2px; margin-top: 1px;
 }
 
 /* ---------------------------------------------------------------- tabs */
@@ -418,6 +441,36 @@ kbd {
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+/* ---------------------------------------------------------------- logos */
+/* Imagens dos clubes vindas da API. Decorativas: o nome está sempre ao lado. */
+.tlogo { width: 20px; height: 20px; flex: none; object-fit: contain; }
+.tlogo-sm { width: 16px; height: 16px; }
+.tlogo-md { width: 26px; height: 26px; }
+.tlogo-lg { width: 40px; height: 40px; }
+
+.tname { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tname > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Avatares de jogador. A foto cobre as iniciais; se falhar, ficam as iniciais. */
+.pavatar {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex: none; overflow: hidden;
+  border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line);
+  color: var(--tx-3); font-size: 9.5px; font-weight: 700; letter-spacing: .3px;
+  font-variant-numeric: tabular-nums;
+}
+.pavatar img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.pavatar-fb { line-height: 1; }
+.pavatar-sm { width: 22px; height: 22px; font-size: 8.5px; }
+.pavatar-md { width: 34px; height: 34px; font-size: 10.5px; }
+.pavatar-lg { width: 44px; height: 44px; font-size: 12px; }
+
+.pname { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pname > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ---------------------------------------------------------------- tabelas */
 .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
 
@@ -447,6 +500,7 @@ tr.eu td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 td.pos { color: var(--tx-3); width: 34px; }
 th.name, td.name { text-align: left; }
 td.name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+td.pts { font-weight: 650; }
 
 thead th.sortable { cursor: pointer; user-select: none; }
 thead th.sortable:hover { color: var(--tx-2); }
@@ -488,6 +542,8 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
   display: block; font-weight: 550; font-size: 13.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.mopp b.mteam { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mopp b.mteam > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mopp span {
   font-size: 10px; letter-spacing: .8px; text-transform: uppercase;
   color: var(--tx-3);
@@ -528,7 +584,9 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 
 .sb-team { font-size: 16px; font-weight: 650; line-height: 1.25; letter-spacing: -.2px; }
+.sb-team .tlogo { display: block; margin: 0 auto 7px; }
 .sb-team.f { text-align: right; }
+.sb-team.f .tlogo { margin-left: auto; margin-right: 0; }
 .sb-team small { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--tx-3); font-weight: 600; }
 
 .sb-sc {
@@ -673,9 +731,10 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 
 @media (max-width: 1023px) {
   .head h1 { font-size: 22px; letter-spacing: -.4px; }
-  .chips { gap: 8px; }
-  .chip { padding: 8px 11px; min-width: 0; flex: 1 1 30%; }
-  .chip .v { font-size: 16px; }
+  .hstats { grid-template-columns: .8fr .8fr 1.2fr 1.2fr; }
+  .hstat { padding: 9px 12px 10px; }
+  .hstat .v { font-size: 20px; }
+  .hstat .v span { font-size: 16px; }
 
   .tabs {
     margin: 16px 0 16px;
@@ -780,20 +839,19 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
     font-size: 15px; font-weight: 600;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .pmain strong.tname { display: flex; align-items: center; gap: 8px; }
+  .pmain strong.tname > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pmain span { font-size: 12px; color: var(--tx-2); font-variant-numeric: tabular-nums; }
   .pmain .pdet { color: var(--tx-3); }
   .ppts { display: flex; flex-direction: column; align-items: flex-end; }
   .ppts b { font-size: 20px; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
   .ppts span { font-size: 10.5px; color: var(--tx-3); letter-spacing: .4px; }
 
-  /* Os cinco números do cabeçalho numa só linha deslizável, para o conteúdo
-     aparecer mais cedo. */
-  .head .chips {
-    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-    margin-inline: -14px; padding-inline: 14px;
-  }
-  .head .chips::-webkit-scrollbar { display: none; }
-  .head .chips .chip { flex: 0 0 auto; min-width: 82px; }
+  /* Duas linhas de dois números: cabe sem deslizar e o conteúdo aparece cedo. */
+  .hstats { grid-template-columns: 1fr 1fr; }
+  .hstat { padding: 9px 12px 10px; }
+  .hstat:nth-child(odd) { border-left: 0; }
+  .hstat:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
 
 /* Barra inferior (Liquid Glass): cápsula flutuante, só em telemóvel. Em tablet
@@ -843,7 +901,6 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 
 @media (max-width: 480px) {
-  .chip { flex: 1 1 46%; }
   .sb-row { grid-template-columns: 1fr auto 1fr; gap: 8px; }
   .sb-sc { font-size: 26px; }
   .sb-team { font-size: 12.5px; }
@@ -873,6 +930,7 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 
 .prox-adv {
+  display: flex; align-items: center; gap: 8px;
   font-size: 20px; font-weight: 700; letter-spacing: -.5px;
   line-height: 1.2; margin-top: 3px;
 }
@@ -916,7 +974,7 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 
 .scorer {
   display: grid;
-  grid-template-columns: 16px 26px 1fr auto;
+  grid-template-columns: 16px 26px 24px 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 9px 16px;
@@ -957,6 +1015,38 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 .kpi b { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
 
 .kpis-sm .kpi b { font-size: 14.5px; }
+
+/* ---------------------------------------------------------- gráficos */
+.legenda {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 11px; color: var(--tx-3);
+}
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legenda i.m { background: var(--gold); }
+.legenda i.s { background: var(--loss); }
+
+.chart-b { padding: 14px 16px 10px; }
+.grafico { width: 100%; min-height: 170px; }
+.g-svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.g-grade { stroke: var(--line); stroke-width: 1; }
+.g-grade.zero { stroke: var(--line-2); }
+.g-eixo { fill: var(--tx-3); font-size: 11px; font-family: var(--font); font-variant-numeric: tabular-nums; }
+.g-valor {
+  fill: var(--tx-2); font-size: 10.5px; font-weight: 600; font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round;
+}
+.g-linha {
+  fill: none; stroke: var(--tx-3); stroke-width: 2;
+  stroke-linejoin: round; stroke-linecap: round;
+}
+.g-linha.m { stroke: var(--gold); }
+.g-linha.s { stroke: var(--loss); }
+.g-ponto { fill: var(--tx-3); stroke: var(--surface); stroke-width: 2; }
+.g-ponto.m { fill: var(--gold); }
+.g-ponto.s { fill: var(--loss); }
 
 /* ---------------------------------------------------------- filtros */
 .barra-filtros {

@@ -1,6 +1,7 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import { esc, pill, card, vazio, barra } from '../ui.js';
+import * as G from '../charts.js';
+import { esc, pill, card, vazio, barra, logo, avatar } from '../ui.js';
 
 function parciais(j) {
   if (!j.parciais || !j.parciais.length) return '';
@@ -11,16 +12,17 @@ function parciais(j) {
   }).join('')}</div>`;
 }
 
-function cartaoProximo(t, j) {
+function cartaoProximo(t, j, mapaL) {
   if (!j) {
     return card('Próximo jogo', vazio('Sem jogos marcados', 'Ainda não há datas para esta equipa.'));
   }
   const adv = j.emCasa ? j.fora : j.casa;
+  const advFid = j.emCasa ? j.foraFid : j.casaFid;
   const q = F.quando(j.data);
   return card('Próximo jogo', `
     <div class="card-b prox">
       <div class="prox-data">${esc(F.dataLonga(j.data))}</div>
-      <div class="prox-adv">${esc(adv)}</div>
+      <div class="prox-adv">${logo(mapaL.get(String(advFid)), 'tlogo-md')}${esc(adv)}</div>
       <div class="prox-meta">
         <span class="tag">${j.emCasa ? 'Em casa' : 'Fora'}</span>
         ${j.local ? `<span class="tag tag-mut">${esc(j.local)}</span>` : ''}
@@ -30,11 +32,12 @@ function cartaoProximo(t, j) {
     </div>`);
 }
 
-function cartaoUltimo(t, j) {
+function cartaoUltimo(t, j, mapaL) {
   if (!j) {
     return card('Último resultado', vazio('Ainda sem jogos', 'Esta equipa ainda não disputou nenhum jogo.'));
   }
   const adv = j.emCasa ? j.fora : j.casa;
+  const advFid = j.emCasa ? j.foraFid : j.casaFid;
   const forma = D.forma(t, 5);
   return card('Último resultado', `
     <div class="card-b prox">
@@ -43,7 +46,7 @@ function cartaoUltimo(t, j) {
         ${pill(j.resultado)}
         <div class="res-sc">${j.meus}<i>–</i>${j.adv}</div>
       </div>
-      <div class="prox-adv prox-adv-sm">${esc(adv)}</div>
+      <div class="prox-adv prox-adv-sm">${logo(mapaL.get(String(advFid)), 'tlogo-sm')}${esc(adv)}</div>
       ${parciais(j)}
     </div>
     <div class="card-h" style="border-top:1px solid var(--line);border-bottom:0">
@@ -61,13 +64,14 @@ function miniClassificacao(t) {
   if (eu && !linhas.includes(eu)) linhas = [...c.linhas.slice(0, 5), null, eu];
 
   const corpo = linhas.map((l) => {
-    if (!l) return '<tr><td colspan="5" class="mut" style="text-align:center">…</td></tr>';
+    if (!l) return '<tr><td colspan="6" class="mut" style="text-align:center">…</td></tr>';
     return `<tr class="${l.eu ? 'eu' : ''}">
       <td class="pos">${esc(l.pos)}</td>
-      <td class="name">${esc(l.nome)}</td>
+      <td class="name"><span class="tname">${logo(l.logo, 'tlogo-sm')}<span>${esc(l.nome)}</span></span></td>
       <td>${l.j ?? '—'}</td>
       <td>${l.v ?? '—'}</td>
       <td>${l.d ?? '—'}</td>
+      <td class="pts">${l.pts ?? '—'}</td>
     </tr>`;
   }).join('');
 
@@ -76,6 +80,7 @@ function miniClassificacao(t) {
       <thead><tr>
         <th scope="col">#</th><th scope="col" class="name">Equipa</th>
         <th scope="col">J</th><th scope="col">V</th><th scope="col">D</th>
+        <th scope="col" class="pts" title="2 pontos por vitória, 1 por derrota">PTS</th>
       </tr></thead>
       <tbody>${corpo}</tbody>
     </table></div>`, c.grupo ? `<span class="side">${esc(c.grupo)}</span>` : '');
@@ -90,6 +95,7 @@ function marcadores(t) {
       <div class="scorer">
         <span class="srank">${i + 1}</span>
         <span class="snum">${esc(a.num || '—')}</span>
+        ${avatar(a.foto, a.nome, 'pavatar-sm')}
         <div class="snome">${esc(a.nome)}<small>${a.pts} pts em ${a.j} jogos</small></div>
         <span class="sppg"><b>${F.num(a.ppg, 1)}</b><small>ppm</small></span>
       </div>`).join('')}
@@ -133,19 +139,61 @@ function numeros(t) {
     </div>`);
 }
 
+function graficoPontos(t) {
+  const jogos = D.realizados(t).filter((j) => j.meus != null);
+  if (!jogos.length) {
+    return card('Pontos marcados e sofridos', vazio('Ainda sem jogos',
+      'O gráfico aparece quando houver resultados.'));
+  }
+  return card('Pontos marcados e sofridos', `
+    <div class="card-b chart-b">
+      <div class="grafico" id="grafico-pontos" role="img"></div>
+    </div>`, `<span class="legenda">
+      <span><i class="m"></i>Marcados</span>
+      <span><i class="s"></i>Sofridos</span>
+    </span>`);
+}
+
 export default {
   render(t) {
     const prox = D.proximoJogo(t);
     const ult = D.ultimoJogo(t);
+    const mapaL = D.logosEquipa(t);
     return `
       <div class="grid grid-2">
-        ${cartaoProximo(t, prox)}
-        ${cartaoUltimo(t, ult)}
+        ${cartaoProximo(t, prox, mapaL)}
+        ${cartaoUltimo(t, ult, mapaL)}
       </div>
       <div class="grid grid-2" style="margin-top:14px">
         ${miniClassificacao(t)}
         ${marcadores(t)}
       </div>
-      <div style="margin-top:14px">${numeros(t)}</div>`;
+      <div style="margin-top:14px">${numeros(t)}</div>
+      <div style="margin-top:14px">${graficoPontos(t)}</div>`;
+  },
+
+  mount(root, t) {
+    const alvo = root.querySelector('#grafico-pontos');
+    if (!alvo) return;
+    const jogos = D.realizados(t).filter((j) => j.meus != null);
+    let largura = 0;
+
+    const desenhar = () => {
+      const w = Math.round(alvo.clientWidth);
+      if (!w || w === largura) return;
+      largura = w;
+      alvo.innerHTML = G.linhaPontos(jogos, w);
+      alvo.setAttribute('aria-label', G.descreverPontos(jogos));
+    };
+
+    desenhar();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observador = new ResizeObserver(desenhar);
+      observador.observe(alvo);
+      return () => observador.disconnect();
+    }
+    window.addEventListener('resize', desenhar);
+    return () => window.removeEventListener('resize', desenhar);
   },
 };

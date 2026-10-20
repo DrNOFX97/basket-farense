@@ -1,5 +1,6 @@
 import * as F from '../format.js';
-import { esc, vazio, card } from '../ui.js';
+import * as D from '../data.js';
+import { esc, vazio, card, logo } from '../ui.js';
 
 let timer = null;
 let vivo = false;
@@ -36,14 +37,14 @@ function nomes(j) {
   return m;
 }
 
-function placar(j) {
+function placar(j, mapaL) {
   const [casa, fora] = j.pontos || [0, 0];
   const live = j.status === 'LIVE';
   return `<div class="sb">
     <div class="sb-row">
-      <div class="sb-team">${esc(j.casa)}<small>casa</small></div>
+      <div class="sb-team">${logo(mapaL.get(String(j.casaFid)), 'tlogo-lg')}${esc(j.casa)}<small>casa</small></div>
       <div class="sb-sc">${casa ?? 0}<i>–</i>${fora ?? 0}</div>
-      <div class="sb-team f">${esc(j.fora)}<small>fora</small></div>
+      <div class="sb-team f">${logo(mapaL.get(String(j.foraFid)), 'tlogo-lg')}${esc(j.fora)}<small>fora</small></div>
     </div>
     <div class="sb-meta">
       ${live
@@ -81,10 +82,11 @@ function feed(j) {
 
 function desenhar(t, d, jogos, proximos) {
   const partes = [];
+  const mapaL = D.logosEquipa(t);
 
   if (jogos.length) {
     for (const j of jogos) {
-      partes.push(placar(j));
+      partes.push(placar(j, mapaL));
       partes.push(card('Últimas acções', feed(j)));
     }
   } else {
@@ -99,10 +101,11 @@ function desenhar(t, d, jogos, proximos) {
       ${proximos.slice(0, 4).map((j) => {
         const emCasa = String(j.casaFid) === String(t.teamFid);
         const adv = emCasa ? j.fora : j.casa;
+        const advFid = emCasa ? j.foraFid : j.casaFid;
         const quando = F.quando(j.inicio);
         return `<div class="mrow mrow-estatico">
           <div class="mdate"><b>${F.dia(j.inicio)}</b>${F.mes(j.inicio)}</div>
-          <div class="mopp"><b>${esc(adv)}</b>
+          <div class="mopp"><b class="mteam">${logo(mapaL.get(String(advFid)), 'tlogo-sm')}<span>${esc(adv)}</span></b>
             <span>${[emCasa ? 'Casa' : 'Fora', F.hora(j.inicio), j.jornada]
               .filter(Boolean).map(esc).join(' · ')}</span></div>
           <div class="mscore dim">${esc(quando)}</div>
