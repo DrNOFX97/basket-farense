@@ -177,6 +177,12 @@ outra vez. Para a revogar usa-se o `id`, que fica na lista do browser
 (localStorage) de quem a criou. Limite de 5 chaves activas por ligação. A
 gestão de chaves não funciona no `serve.py` local (não há Blobs).
 
+Ao gerar uma chave, o botão "Copiar prompt com a chave" copia um prompt para
+colar numa LLM (Claude Code, Cursor…) que esteja a construir outra app com estes
+dados: traz a chave, os endpoints, a estrutura do JSON e as armadilhas (datas em
+hora local, campos sempre a zero). O texto está em `promptLlm()` em
+`app/js/views/api.js`; actualiza-o se o formato da API mudar.
+
 Opcionalmente, a variável de ambiente `API_KEYS` do Netlify aceita chaves fixas
 (mínimo 32 caracteres, separadas por vírgulas) para uso interno:
 
