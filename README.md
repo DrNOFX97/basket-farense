@@ -95,7 +95,8 @@ npm run fotos
 
 O mapa gerado (`app/fotos/fotos.json`) é carregado pela app e tem prioridade
 sobre as fotos da API. Formatos: JPG, PNG, WebP ou AVIF; idealmente quadradas,
-400×400 px e menos de 500 KB.
+400×400 px e menos de 500 KB. Para caras recortadas, usa PNG; se houver PNG e
+JPEG do mesmo jogador, o script escolhe o PNG.
 
 ---
 

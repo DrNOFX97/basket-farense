@@ -21,6 +21,16 @@ const DADOS = path.join(RAIZ, 'data', 'farense.json');
 const MAPA = path.join(PASTA, 'fotos.json');
 const LISTA = path.join(PASTA, 'jogadores.csv');
 const EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
+// Se houver mais do que uma versão do mesmo jogador, a cara recortada em PNG
+// ganha ao JPEG original.
+const PRIORIDADE = new Map([
+  ['.png', 0],
+  ['.webp', 1],
+  ['.jpg', 2],
+  ['.jpeg', 3],
+  ['.avif', 4],
+]);
+const prioridade = (nome) => PRIORIDADE.get(path.extname(nome).toLowerCase()) ?? 99;
 
 function normalizar(s) {
   return String(s || '')
@@ -104,7 +114,8 @@ for (const equipaId of equipas.keys()) {
   if (!fs.existsSync(keep)) fs.writeFileSync(keep, '');
 }
 
-const ficheiros = listarImagens(PASTA).sort((a, b) => a.rel.localeCompare(b.rel, 'pt'));
+const ficheiros = listarImagens(PASTA).sort((a, b) =>
+  prioridade(a.nome) - prioridade(b.nome) || a.rel.localeCompare(b.rel, 'pt'));
 const mapa = {};
 const arquivo = {};
 const avisos = [];
@@ -145,7 +156,11 @@ for (const f of ficheiros) {
     avisos.push(`${f.rel}: a foto deve ficar numa subpasta de escalão`);
   }
   if (mapa[fid]) {
-    avisos.push(`${f.rel}: FID ${fid} já tinha ${arquivo[fid]}; ignorado`);
+    // O PNG já foi processado primeiro; o JPEG equivalente é ignorado em
+    // silêncio. Só avisa se houver duas versões com a mesma prioridade.
+    if (prioridade(f.nome) === prioridade(arquivo[fid])) {
+      avisos.push(`${f.rel}: FID ${fid} já tinha ${arquivo[fid]}; ignorado`);
+    }
     continue;
   }
 

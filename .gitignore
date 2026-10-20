@@ -10,3 +10,4 @@ node_modules/
 netlify/lib/equipas.mjs
 .playwright-mcp/
 fotos-pendentes/
+fotos-originais/

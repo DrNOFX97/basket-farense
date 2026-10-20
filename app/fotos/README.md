@@ -38,6 +38,7 @@ npm run fotos
 ```
 
 O script percorre as subpastas, escreve `fotos.json` (não editar à mão) e
-atualiza `jogadores.csv`. Formatos aceites: JPG, PNG, WebP e AVIF. Para melhor
-resultado: imagem quadrada, cerca de 400×400 px e menos de 500 KB. Fotos de
-menores só devem ser publicadas com autorização.
+atualiza `jogadores.csv`. Formatos aceites: JPG, PNG, WebP e AVIF. Para caras
+recortadas, usa PNG; se houver PNG e JPEG do mesmo jogador, o script usa o PNG.
+Para melhor resultado: imagem quadrada, cerca de 400×400 px e menos de 500 KB.
+Fotos de menores só devem ser publicadas com autorização.
