@@ -35,6 +35,13 @@ if (!fs.existsSync(DADOS)) {
 fs.rmSync(DIST, { recursive: true, force: true });
 copiar(path.join(RAIZ, 'app'), DIST);
 
+// Data/hora desta publicação. É distinta do "gerado" dos dados: as fotos e a
+// interface mudam a cada deploy, mas o JSON da NBN23 só muda quando é gerado.
+fs.writeFileSync(
+  path.join(DIST, 'versao.json'),
+  JSON.stringify({ construido: new Date().toISOString() }) + '\n',
+);
+
 // O CSS bloqueia o primeiro render: no ficheiro publicado vai dentro do HTML,
 // poupando um pedido (~0,5 s em 4G lento). Em app/ continua como <link>, para
 // o servidor local e a edição não mudarem.

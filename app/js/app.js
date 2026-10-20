@@ -34,6 +34,7 @@ const ICONES = {
 };
 
 let limpar = null;
+let versao = null;
 
 // ------------------------------------------------------------------ rotas --
 function parse() {
@@ -110,8 +111,14 @@ function desenharSidebar(ep, tAtual) {
 
   const nota = document.getElementById('foot-note');
   const g = dados();
-  nota.innerHTML = `${ep.equipas.length} escalões · dados NBN23`
-    + (g && g.gerado ? `<br>actualizado ${esc(g.gerado)}` : '');
+  const gerado = g && g.gerado ? F.dataHora(g.gerado) : '';
+  const construido = versao && versao.construido ? F.dataHora(versao.construido) : '';
+  nota.innerHTML = [
+    construido ? `Site: ${esc(construido)}` : '',
+    gerado ? `Dados NBN23: ${esc(gerado)}` : '',
+  ].filter(Boolean).join('<br>');
+  nota.title = 'Site: última publicação desta versão. '
+    + 'Dados NBN23: última geração do ficheiro de dados.';
   document.getElementById('live-link').setAttribute('href', href(ep.id, tAtual.id, 'ao-vivo'));
 }
 
@@ -466,7 +473,38 @@ function ligarAtalhos() {
   });
 }
 
+function ligarMenu() {
+  const raiz = document.documentElement;
+  const sidebar = document.getElementById('sidebar');
+  const fechar = document.getElementById('side-toggle');
+  const abrir = document.getElementById('side-reopen');
+  if (!sidebar || !fechar || !abrir) return;
+
+  const aplicar = (fechado, focar = false) => {
+    if (fechado) raiz.dataset.menu = 'fechado';
+    else delete raiz.dataset.menu;
+
+    fechar.setAttribute('aria-expanded', String(!fechado));
+    abrir.setAttribute('aria-expanded', String(!fechado));
+    if (!fechado) sidebar.removeAttribute('aria-hidden');
+
+    try {
+      localStorage.setItem('menu-lateral', fechado ? 'fechado' : 'aberto');
+    } catch { /* sem armazenamento */ }
+
+    // Ao fechar, tira o foco de dentro da sidebar antes de a esconder dos
+    // leitores de ecrã.
+    if (focar) (fechado ? abrir : fechar).focus();
+    if (fechado) sidebar.setAttribute('aria-hidden', 'true');
+  };
+
+  fechar.addEventListener('click', () => aplicar(true, true));
+  abrir.addEventListener('click', () => aplicar(false, true));
+  aplicar(raiz.dataset.menu === 'fechado');
+}
+
 function ligarShell() {
+  ligarMenu();
   ligarAtalhos();
   ligarGestos();
 
@@ -516,9 +554,16 @@ function ligarShell() {
   window.addEventListener('popstate', rotear);
 }
 
+async function carregarVersao() {
+  try {
+    const r = await fetch('/versao.json', { cache: 'no-store' });
+    if (r.ok) versao = await r.json();
+  } catch { /* sem versão: o rodapé mostra só a data dos dados */ }
+}
+
 (async function boot() {
   try {
-    await carregar();
+    await Promise.all([carregar(), carregarVersao()]);
   } catch (e) {
     document.getElementById('conteudo').innerHTML = '';
     document.getElementById('erro-fatal').hidden = false;

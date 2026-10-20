@@ -48,6 +48,12 @@
   [headers.values]
     Cache-Control = "public, max-age=600"
 
+# Muda a cada build; não pode ficar preso na cache do CDN.
+[[headers]]
+  for = "/versao.json"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 [[headers]]
   for = "/*"
   [headers.values]

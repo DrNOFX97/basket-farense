@@ -5,7 +5,7 @@
     python3 serve.py --port 9000
     python3 serve.py --no-live    # sem polling a API
 
-Serve a pasta app/, o JSON de dados (com gzip) e /api/live.
+Serve a pasta app/, o JSON de dados (com gzip), /versao.json e /api/live.
 Biblioteca padrao apenas. Sem build step, sem dependencias.
 """
 import argparse
@@ -15,6 +15,7 @@ import mimetypes
 import os
 import threading
 import time
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
@@ -36,6 +37,15 @@ def ler_json():
     dados = json.load(open(DATA, encoding='utf-8'))
     _cache['json'] = (m, dados)
     return dados
+
+
+def versao_local():
+    """Hora da última alteração ao shell, para imitar o build de produção."""
+    fontes = [os.path.join(APP, 'index.html'),
+              os.path.join(APP, 'js', 'app.js'),
+              os.path.join(APP, 'css', 'app.css')]
+    m = max(os.path.getmtime(p) for p in fontes if os.path.exists(p))
+    return datetime.fromtimestamp(m).astimezone().isoformat(timespec='seconds')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -93,6 +103,11 @@ class Handler(BaseHTTPRequestHandler):
             d = ler_json()
             return self.json({'gerado': d.get('gerado'), 'epocas':
                               [e['id'] for e in d['epocas']]})
+
+        if caminho == '/versao.json':
+            # Em produção este ficheiro é criado no build; em local usa a hora
+            # da última alteração ao shell.
+            return self.json({'construido': versao_local()})
 
         if caminho == '/data/farense.json':
             return self.enviar(json.dumps(ler_json(), ensure_ascii=False,

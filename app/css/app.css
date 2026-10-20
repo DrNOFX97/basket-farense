@@ -161,12 +161,14 @@ h1, h2, h3, p { margin: 0; }
   display: grid;
   grid-template-columns: var(--sidebar) minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns .22s ease;
 }
 
 .sidebar {
   position: sticky;
   top: 0;
   height: 100vh;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -175,6 +177,82 @@ h1, h2, h3, p { margin: 0; }
   border-right: 1px solid var(--line);
   overflow-y: auto;
   scrollbar-width: thin;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+/* O menu pode recolher no desktop. Fica uma pequena aba na borda esquerda
+   para o voltar a abrir. */
+@media (min-width: 768px) {
+  html[data-menu="fechado"] .app { grid-template-columns: 0 minmax(0, 1fr); }
+
+  html[data-menu="fechado"] .sidebar {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-18px);
+    padding-left: 0;
+    padding-right: 0;
+    border-right: 0;
+    overflow: hidden;
+  }
+}
+
+.side-toggle {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--tx-3);
+  cursor: pointer;
+  transition: background .14s, color .14s;
+}
+.side-toggle:hover { background: var(--surface-2); color: var(--tx); }
+
+.side-toggle svg,
+.side-reopen svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.side-reopen {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 40;
+  display: none;
+  width: 24px;
+  height: 58px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  border-left: 0;
+  border-radius: 0 10px 10px 0;
+  background: var(--bg-side);
+  color: var(--tx-2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .14);
+  cursor: pointer;
+  transition: width .15s ease, background .15s ease, color .15s ease;
+}
+@media (min-width: 768px) {
+  html[data-menu="fechado"] .side-reopen { display: flex; }
+}
+.side-reopen:hover {
+  width: 30px;
+  background: var(--surface);
+  color: var(--tx);
 }
 
 .main { min-width: 0; display: flex; flex-direction: column; }
@@ -342,7 +420,10 @@ kbd {
   100% { box-shadow: 0 0 0 0 rgba(53, 208, 127, 0); }
 }
 
-.foot-note { font-size: 10.5px; color: var(--tx-3); padding: 0 8px; line-height: 1.45; }
+.foot-note {
+  font-size: 10.5px; color: var(--tx-3); padding: 0 8px; line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------------------------------------------------------------- cabeçalho do escalão */
 .head { margin-bottom: 18px; }

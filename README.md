@@ -169,7 +169,7 @@ O teste de fumo corre cada vista para cada equipa e cada jogo, e falha se
 aparecer HTML vazio, `undefined`, `NaN` ou `[object Object]`.
 
 Rotas do servidor: `/`, `/css/app.css`, `/js/…`, `/data/farense.json`,
-`/api/meta` e `/api/live`.
+`/versao.json`, `/api/meta` e `/api/live`.
 
 ```bash
 # testa a função ao vivo à parte do Netlify (credenciais por argumento)
@@ -226,7 +226,9 @@ hora local (não converter fusos).
 - Site: <https://basket-farense.netlify.app>
 
 O Netlify serve ficheiros estáticos: o build copia `app/` e
-`data/farense.json` para `dist/` e publica essa pasta.
+`data/farense.json` para `dist/` e publica essa pasta. Gera também
+`dist/versao.json` com a hora da publicação: o rodapé da sidebar mostra
+**Dados NBN23** (campo `gerado` do JSON) e **Site** (essa hora do build).
 
 ```bash
 node scripts/build-static.mjs     # gera dist/ e netlify/lib/equipas.mjs

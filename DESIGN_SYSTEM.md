@@ -29,12 +29,17 @@ Espaço 4/8/12/16/24/32/48 · Raios 8 (controlos) / 12 (cartões) / 16 / 999 (pi
 | 768–1023 px (tablet) | sidebar 232 px + separadores no topo | tabelas, grelhas a 1 coluna |
 | ≥ 1024 px (desktop) | sidebar 288 px + separadores no topo, atalhos de teclado | tabelas, multi-coluna, largura máx. 1180 px |
 
+A sidebar pode recolher em tablet/desktop: `data-menu="fechado"` em `<html>`,
+estado em `localStorage('menu-lateral')`, e uma aba `.side-reopen` na borda
+esquerda para voltar a abrir. O rodapé mostra a data dos dados NBN23 e a data
+do último build (`/versao.json`).
+
 ## Variantes por plataforma
 - **Mobile:** materialidade tipo iOS — Tab Bar cápsula (`backdrop-filter: blur(24px) saturate(180%)`, fallback sólido), alvos ≥ 44 px (Tab Bar 52 px), `env(safe-area-inset-bottom)`, listas agrupadas.
 - **Desktop/tablet:** superfícies neutras sem vidro, tabelas com ordenação, foco visível, atalhos (`g`+`r/j/c/p/l`, `[` `]`, `t`, `?`).
 
 ## Componentes base
-`.card` · `.hstats`/`.hstat` (faixa de números do escalão) · `.tlogo`/`.tname` (logos de clube) · `.pavatar`/`.pname` (caras de jogador) · `.tabs`/`.tab` · `.tb` (Tab Bar) · `.sheet` (sheet de escalão) · `.select` · `.btn` · `.theme-btn` · `kbd` · `dialog.ajuda` · `table` + `.tw` (scroll dentro do cartão) · `.cards-m` (`.pcard`, `.ccard`) · `.skel` · `.empty` · `.aviso`.
+`.card` · `.hstats`/`.hstat` (faixa de números do escalão) · `.tlogo`/`.tname` (logos de clube) · `.pavatar`/`.pname` (caras de jogador) · `.tabs`/`.tab` · `.tb` (Tab Bar) · `.sheet` (sheet de escalão) · `.select` · `.btn` · `.theme-btn` · `.side-toggle`/`.side-reopen` (recolher a sidebar) · `kbd` · `dialog.ajuda` · `table` + `.tw` (scroll dentro do cartão) · `.cards-m` (`.pcard`, `.ccard`) · `.skel` · `.empty` · `.aviso`.
 
 ## Avatares de jogador
 `avatar(foto, nome, classe)` em `app/js/ui.js` desenha um círculo com a foto e as iniciais por baixo. Se `foto` vier vazia ou `"N/A"`, ficam só as iniciais; se o URL falhar, o handler global remove o `<img>` e as iniciais continuam visíveis. Usado no plantel (tabela e cards), nos melhores marcadores e no boxscore do jogo. Tamanhos: `.pavatar-sm` 22 px, base 28 px, `.pavatar-md` 34 px, `.pavatar-lg` 44 px. A foto vem de `Player.photo` na API; o build pede-a no roster e no boxscore de cada jogo e normaliza `"N/A"` para `null`. As fotos manuais em `app/fotos/<escalão>/` são convertidas em `fotos.json` (`npm run fotos`) e têm prioridade sobre as da API.

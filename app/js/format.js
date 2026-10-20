@@ -34,6 +34,24 @@ export function hora(iso) {
   return p && p.h !== null ? `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}` : '';
 }
 
+// Data e hora completas para os metadados do rodapé. Aceita tanto
+// "2026-10-20 02:12" (hora local dos dados) como um ISO com fuso (build).
+export function dataHora(iso) {
+  if (!iso) return '';
+  const d = new Date(String(iso).replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return '';
+  const p = new Intl.DateTimeFormat('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(d);
+  const v = (tipo) => (p.find((x) => x.type === tipo) || {}).value || '';
+  return `${v('day')}/${v('month')}/${v('year')} ${v('hour')}:${v('minute')}`;
+}
+
 export function dataLonga(iso) {
   const p = partes(iso);
   if (!p) return 'Data a confirmar';

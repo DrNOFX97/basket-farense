@@ -13,6 +13,13 @@
     var t = localStorage.getItem('tema');
     if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   } catch (e) { /* sem armazenamento: segue o sistema */ }
+
+  // Restaura o menu lateral fechado antes da primeira pintura.
+  try {
+    if (localStorage.getItem('menu-lateral') === 'fechado') {
+      document.documentElement.dataset.menu = 'fechado';
+    }
+  } catch (e) { /* sem armazenamento: menu aberto */ }
 </script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Farense Basket">
@@ -42,13 +49,18 @@
 <a class="skip" href="#conteudo">Saltar para o conteúdo</a>
 
 <div class="app">
-  <aside class="sidebar" aria-label="Navegação">
+  <aside class="sidebar" id="sidebar" aria-label="Navegação">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true"><img src="/img/emblema-96.png" alt="" width="38" height="38"></div>
       <div class="brand-txt">
         <strong>SC Farense</strong>
         <span>Basquetebol</span>
       </div>
+      <button type="button" class="side-toggle" id="side-toggle"
+        aria-label="Esconder menu lateral" aria-controls="sidebar" aria-expanded="true"
+        title="Esconder menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+      </button>
     </div>
 
     <div class="season" id="season" role="group" aria-label="Época"></div>
@@ -106,6 +118,12 @@
     </main>
   </div>
 </div>
+
+<button type="button" class="side-reopen" id="side-reopen"
+  aria-label="Mostrar menu lateral" aria-controls="sidebar" aria-expanded="false"
+  title="Mostrar menu">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg>
+</button>
 
 <dialog class="ajuda" id="ajuda" aria-labelledby="ajuda-t">
   <h2 id="ajuda-t">Atalhos de teclado</h2>
