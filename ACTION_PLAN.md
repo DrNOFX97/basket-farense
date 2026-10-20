@@ -8,7 +8,7 @@ Branch `ui-audit`. Esforço: B baixo · M médio · A alto. Impacto UX: ↑ baix
 | UTF-8 em `serve.py`/`live.py`/`build_data.py` | local/Windows | B | ↑↑↑ | feito `558bd70` |
 | Erro de dados com causa, 2 tentativas e "Tentar de novo" | todas | B | ↑↑ | feito `558bd70` |
 
-## P1 — Estrutura por plataforma (feito, exceto swipe-back)
+## P1 — Estrutura por plataforma (feito)
 | Item | Plataforma | Esforço | Impacto | Estado |
 |---|---|---|---|---|
 | Tab Bar inferior (5 destinos) | mobile | M | ↑↑↑ | feito `d104159` |
@@ -17,14 +17,14 @@ Branch `ui-audit`. Esforço: B baixo · M médio · A alto. Impacto UX: ↑ baix
 | Layout tablet 768–1023 px | tablet | B | ↑↑ | feito `7fe382f` |
 | Atalhos de teclado + painel de ajuda | desktop | M | ↑↑ | feito `cd75c34` |
 | Sheet de escalão (no lugar do `<select>`), com arrastar para fechar | mobile | M | ↑↑ | feito |
-| Detalhe de jogo como push com swipe-back | mobile | A | ↑↑ | por fazer |
+| Swipe-back no detalhe de jogo (arrastar desde a borda esquerda) | mobile | M | ↑↑ | feito |
 
 ## P2 — Design system e Liquid Glass (feito)
 | Item | Plataforma | Esforço | Impacto | Estado |
 |---|---|---|---|---|
 | Tokens semânticos + tema claro/escuro + alternador | todas | M | ↑↑↑ | feito `8ea3408` |
 | Vidro (blur + saturação) só na Tab Bar; superfícies neutras no desktop | mobile/desktop | B | ↑↑ | feito |
-| `prefers-reduced-transparency` / `prefers-contrast` | todas | B | ↑ | por fazer |
+| `prefers-reduced-transparency` / `prefers-contrast` | todas | B | ↑ | feito |
 
 ## P3 — Polimento
 | Item | Plataforma | Esforço | Impacto | Estado |

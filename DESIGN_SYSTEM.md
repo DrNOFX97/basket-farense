@@ -40,3 +40,11 @@ Entrada de vista 280 ms (`.vista-enter`), Tab Bar com transição de 200 ms. `pr
 
 ## Tema
 Segue o sistema; `data-theme` em `<html>` força claro/escuro e é guardado em `localStorage('tema')` (opcional, com `try/catch`). Um script inline no `<head>` aplica-o antes da primeira pintura.
+
+## Preferências do sistema
+- `prefers-reduced-motion`: sem animações nem transições.
+- `prefers-reduced-transparency`: topbar, Tab Bar e sheet passam a superfícies sólidas, sem `backdrop-filter`.
+- `prefers-contrast: more`: bordas e texto secundário/terciário mais fortes, nos dois temas.
+
+## Gestos (mobile)
+Swipe-back no detalhe de jogo (arrastar ≥ 90 px desde a borda esquerda); arrastar o puxador da sheet de escalão ≥ 90 px fecha-a.

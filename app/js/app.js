@@ -309,6 +309,51 @@ function ligarSheet() {
   puxador.addEventListener('pointercancel', largar);
 }
 
+// Swipe-back (telemóvel): no detalhe de jogo, arrastar desde a borda esquerda
+// para a direita volta à lista de jogos. O conteúdo acompanha o dedo.
+function ligarGestos() {
+  const raiz = document.getElementById('conteudo');
+  const movel = matchMedia('(max-width: 767px)');
+  let x0 = null;
+  let y0 = 0;
+  let dx = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    const p = parse();
+    const t = e.touches[0];
+    x0 = (movel.matches && p.vista === 'jogo' && e.touches.length === 1 && t.clientX <= 28)
+      ? t.clientX : null;
+    y0 = t.clientY;
+    dx = 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (x0 === null) return;
+    const t = e.touches[0];
+    dx = t.clientX - x0;
+    if (Math.abs(t.clientY - y0) > Math.abs(dx) && dx < 24) { x0 = null; return; }
+    if (dx > 0) {
+      raiz.style.transition = 'none';
+      raiz.style.transform = `translateX(${dx}px)`;
+      raiz.style.opacity = String(Math.max(.4, 1 - dx / 500));
+    }
+  }, { passive: true });
+
+  const largar = () => {
+    if (x0 === null) return;
+    x0 = null;
+    raiz.style.transition = 'transform .2s ease, opacity .2s ease';
+    raiz.style.transform = '';
+    raiz.style.opacity = '';
+    if (dx > 90) {
+      const p = parse();
+      location.hash = href(p.epoca, p.equipa, 'jogos');
+    }
+  };
+  document.addEventListener('touchend', largar);
+  document.addEventListener('touchcancel', largar);
+}
+
 // Alterna claro/escuro. Parte do que o sistema usa agora e guarda a escolha.
 function alternarTema() {
   const raiz = document.documentElement;
@@ -365,6 +410,7 @@ function ligarAtalhos() {
 
 function ligarShell() {
   ligarAtalhos();
+  ligarGestos();
   document.querySelectorAll('[data-tema-toggle]').forEach((b) => b.addEventListener('click', alternarTema));
 
   document.getElementById('nav').addEventListener('click', (e) => {

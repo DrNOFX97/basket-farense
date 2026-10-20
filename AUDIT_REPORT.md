@@ -16,7 +16,8 @@ Auditoria de 2026-10-20 a https://basket-farense.netlify.app/ e ao código em `a
 | Cabeçalho com 5 chips ocupava ~190 px antes do conteúdo | corrigido: linha deslizável (57 px) |
 | `backdrop-filter` só na topbar | corrigido: Tab Bar em vidro com fallback |
 | Troca de escalão em `<select>` nativo | corrigido: sheet de baixo com Séniores/Formação, registo e seleção marcada |
-| Detalhe de jogo sem swipe-back; sem pull-to-refresh | por fazer |
+| Detalhe de jogo sem swipe-back | corrigido: arrastar desde a borda esquerda volta aos Jogos |
+| Sem pull-to-refresh | por fazer (os dados são estáticos; só o Ao vivo atualiza sozinho) |
 
 ## Desktop
 - Sidebar com agrupamento Séniores/Formação e estado ativo: adequada.

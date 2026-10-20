@@ -1061,3 +1061,22 @@ tr.total td.name { color: var(--tx-2); }
   .prox-adv { font-size: 18px; }
   .res-sc { font-size: 26px; }
 }
+
+/* ================================================================ acessibilidade do sistema */
+
+/* Menos transparência: o vidro passa a superfície sólida. */
+@media (prefers-reduced-transparency: reduce) {
+  .tabbar, .sheet-painel { background: var(--surface-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .topbar { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .ajuda::backdrop { backdrop-filter: none; }
+}
+
+/* Mais contraste: bordas e texto terciário mais fortes. Fica no fim para
+   vencer os blocos de tema acima. */
+@media (prefers-contrast: more) {
+  :root { --line: #4A5262; --line-2: #6C7482; --tx-3: #B4BBC7; --tx-2: #D2D7E0; }
+  :root[data-theme="light"] { --line: #8A92A0; --line-2: #6B7380; --tx-3: #3F4756; --tx-2: #2B323E; }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --line: #8A92A0; --line-2: #6B7380; --tx-3: #3F4756; --tx-2: #2B323E; }
+}
