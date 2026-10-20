@@ -51,6 +51,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg>
         <span>Tema</span>
       </button>
+      <button type="button" class="theme-btn theme-side" data-ajuda><kbd>?</kbd><span>Atalhos</span></button>
       <p class="foot-note" id="foot-note"></p>
     </div>
   </aside>
@@ -75,6 +76,21 @@
     <main class="content" id="conteudo" tabindex="-1"></main>
   </div>
 </div>
+
+<dialog class="ajuda" id="ajuda" aria-labelledby="ajuda-t">
+  <h2 id="ajuda-t">Atalhos de teclado</h2>
+  <dl>
+    <dt><kbd>g</kbd> <kbd>r</kbd></dt><dd>Resumo</dd>
+    <dt><kbd>g</kbd> <kbd>j</kbd></dt><dd>Jogos</dd>
+    <dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Classificação</dd>
+    <dt><kbd>g</kbd> <kbd>p</kbd></dt><dd>Plantel</dd>
+    <dt><kbd>g</kbd> <kbd>l</kbd></dt><dd>Ao vivo</dd>
+    <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Escalão anterior / seguinte</dd>
+    <dt><kbd>t</kbd></dt><dd>Alternar tema claro / escuro</dd>
+    <dt><kbd>?</kbd></dt><dd>Esta ajuda</dd>
+  </dl>
+  <form method="dialog"><button class="btn" autofocus>Fechar</button></form>
+</dialog>
 
 <nav class="tabbar" id="tabbar" aria-label="Secções do escalão"></nav>
 

@@ -249,7 +249,52 @@ function alternarTema() {
   try { localStorage.setItem('tema', novo); } catch { /* sem armazenamento */ }
 }
 
+// Atalhos de teclado (desktop). `g` abre um "acorde": g + letra muda de secção.
+const SECCAO_POR_TECLA = { r: 'resumo', j: 'jogos', c: 'classificacao', p: 'plantel', l: 'ao-vivo' };
+
+function ligarAtalhos() {
+  const ajuda = document.getElementById('ajuda');
+  const abrirAjuda = () => { if (!ajuda.open) ajuda.showModal(); };
+  document.querySelectorAll('[data-ajuda]').forEach((b) => b.addEventListener('click', abrirAjuda));
+
+  let aguardaG = false;
+  let timer = null;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || ajuda.open) return;
+    if (e.target.closest('input, select, textarea, [contenteditable]')) return;
+
+    const p = parse();
+    const ep = epoca(p.epoca);
+    if (!ep) return;
+
+    if (aguardaG) {
+      aguardaG = false;
+      clearTimeout(timer);
+      const vista = SECCAO_POR_TECLA[e.key];
+      if (vista) { e.preventDefault(); location.hash = href(ep.id, p.equipa, vista); }
+      return;
+    }
+
+    if (e.key === 'g') {
+      aguardaG = true;
+      timer = setTimeout(() => { aguardaG = false; }, 1200);
+    } else if (e.key === '?') {
+      e.preventDefault();
+      abrirAjuda();
+    } else if (e.key === 't') {
+      alternarTema();
+    } else if (e.key === '[' || e.key === ']') {
+      const i = ep.equipas.findIndex((x) => x.id === p.equipa);
+      const n = ep.equipas.length;
+      const alvo = ep.equipas[(i + (e.key === ']' ? 1 : -1) + n) % n];
+      location.hash = href(ep.id, alvo.id, p.vista === 'jogo' ? 'resumo' : p.vista);
+    }
+  });
+}
+
 function ligarShell() {
+  ligarAtalhos();
   document.querySelectorAll('[data-tema-toggle]').forEach((b) => b.addEventListener('click', alternarTema));
 
   document.getElementById('nav').addEventListener('click', (e) => {
