@@ -121,6 +121,12 @@ app/
     ui.js             componentes reutilizados (pill, cartão, barras)
     views/            resumo, jogos, jogo, classificacao, plantel, aovivo
 scripts/check-views.mjs   teste de fumo das vistas contra o JSON real
+scripts/build-static.mjs  copia app/ + data/ para dist/ e gera a lista de equipas
+scripts/check-live.mjs    testa a função ao vivo sem passar pelo Netlify
+netlify.toml              build, redirect /api/live → função, cabeçalhos
+netlify/
+  functions/live.mjs      ao vivo no Netlify (equivalente do live.py)
+  lib/equipas.mjs         gerado no build a partir de data/farense.json
 ```
 
 ---
@@ -140,6 +146,42 @@ aparecer HTML vazio, `undefined`, `NaN` ou `[object Object]`.
 
 Rotas do servidor: `/`, `/css/app.css`, `/js/…`, `/data/farense.json`,
 `/api/meta` e `/api/live`.
+
+```bash
+# testa a função ao vivo à parte do Netlify (credenciais por argumento)
+node scripts/check-live.mjs <email> <password>
+```
+
+---
+
+## Publicação
+
+- Repositório: <https://github.com/DrNOFX97/basket-farense>
+- Site: <https://basket-farense.netlify.app>
+
+O Netlify serve ficheiros estáticos: o build copia `app/` e
+`data/farense.json` para `dist/` e publica essa pasta.
+
+```bash
+node scripts/build-static.mjs     # gera dist/ e netlify/lib/equipas.mjs
+netlify deploy --prod --build     # build + deploy
+```
+
+O "Ao vivo" no site publicado é uma função Netlify
+(`netlify/functions/live.mjs`), o equivalente do `live.py` para um ambiente sem
+estado duradouro. Precisa de duas variáveis de ambiente no projecto Netlify:
+
+| Variável | Valor |
+| --- | --- |
+| `SWISH_EMAIL` | conta descartável usada para autenticar na API |
+| `SWISH_PASSWORD` | password dessa conta |
+
+Sem elas, `/api/live` responde com um `erro` e a vista diz que o ao vivo não
+está configurado; o resto do site funciona na mesma.
+
+Para o site passar a actualizar sozinho a cada push, liga o repositório em
+**Netlify → Site configuration → Build & deploy → Link repository**. O
+comando de build e a pasta a publicar já vêm do `netlify.toml`.
 
 ---
 
