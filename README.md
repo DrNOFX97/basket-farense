@@ -168,14 +168,21 @@ Base: <https://basket-farense.netlify.app>. A chave vai no cabeçalho
 | `/api/v1/<época>/<equipa>` | equipa completa |
 | `/api/v1/<época>/<equipa>/jogos/<fid>` | um jogo (parciais, boxscore, acções) |
 
-Sem chave ou com chave errada responde 401. As chaves ficam na variável de
-ambiente `API_KEYS` do Netlify, separadas por vírgulas (uma por cliente, para
-poder revogar uma sem afectar as outras; mínimo 32 caracteres, as mais curtas
-são ignoradas — `openssl rand -hex 16`):
+Sem chave ou com chave errada responde 401.
+
+**Chaves.** No site, a página `#/api` (link "API" no menu lateral, desktop) deixa
+cada pessoa gerar a sua chave. A chave aparece uma única vez; o servidor só
+guarda o SHA-256 (Netlify Blobs, store `chaves`), por isso não há como a ver
+outra vez. Para a revogar usa-se o `id`, que fica na lista do browser
+(localStorage) de quem a criou. Limite de 5 chaves activas por ligação. A
+gestão de chaves não funciona no `serve.py` local (não há Blobs).
+
+Opcionalmente, a variável de ambiente `API_KEYS` do Netlify aceita chaves fixas
+(mínimo 32 caracteres, separadas por vírgulas) para uso interno:
 
 ```bash
-netlify env:set API_KEYS "chave1,chave2"   # e voltar a fazer deploy
-node scripts/check-api.mjs                 # teste local, sem Netlify
+netlify env:set API_KEYS "$(openssl rand -hex 16)"
+node scripts/check-api.mjs      # teste local, sem Netlify (armazém em memória)
 ```
 
 Os dados mudam quando corres `python3 build_data.py` e voltas a publicar; o

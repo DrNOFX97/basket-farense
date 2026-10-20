@@ -290,6 +290,8 @@ h1, h2, h3, p { margin: 0; }
   padding: 7px 8px; border-radius: 8px;
 }
 .theme-btn:hover { background: var(--hl-2); color: var(--tx); }
+a.theme-btn { text-decoration: none; }
+.theme-btn.on { color: var(--tx); background: var(--hl); font-weight: 600; }
 .theme-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
 .theme-icon { margin-left: auto; width: 44px; height: 44px; justify-content: center; padding: 0; }
 
@@ -1084,3 +1086,56 @@ tr.total td.name { color: var(--tx-2); }
 /* O Netlify injeta este iframe ("Powered by Netlify") no canto inferior e
    tapava a Tab Bar em telemóvel. */
 #nl-badge-frame { display: none !important; }
+
+
+/* -------------------------------------------------------------------- API */
+.api-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.api-input {
+  flex: 1 1 220px; min-height: 44px; padding: 0 14px;
+  background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+}
+.api-input:focus-visible, .api-btn:focus-visible { outline: 2px solid var(--tx); outline-offset: 2px; }
+.api-btn {
+  min-height: 44px; padding: 0 16px; cursor: pointer;
+  background: var(--surface-3); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  font-size: 13.5px; font-weight: 600;
+}
+.api-btn:hover { background: var(--hl-3); }
+.api-btn:disabled { opacity: .55; cursor: default; }
+.api-btn-prim { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.api-btn-prim:hover { background: var(--accent); opacity: .88; }
+.api-btn-perigo { color: var(--loss); }
+.api-erro { margin-top: 12px; color: var(--loss); font-size: 13px; }
+.api-nova {
+  margin-top: 16px; padding: 14px; border-radius: var(--r);
+  background: var(--win-dim); border: 1px solid var(--win);
+}
+.api-nova b { display: block; font-size: 13.5px; margin-bottom: 10px; }
+.api-nova-linha { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.api-nova-linha code {
+  flex: 1 1 260px; min-width: 0; padding: 10px 12px; overflow-wrap: anywhere; user-select: all;
+  background: var(--surface); border-radius: var(--r-sm); font-size: 13px;
+}
+.api-lista { list-style: none; margin: 18px 0 0; padding: 0; }
+.api-chave {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--line);
+}
+.api-chave-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13.5px; }
+.api-chave-txt .mut { font-size: 12px; }
+.api-vazio { margin-top: 16px; font-size: 13px; }
+.api-nota { margin-top: 16px; font-size: 12px; line-height: 1.5; }
+.api-doc p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--tx-2); }
+.api-doc code, .api-lista code { font-size: 12.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.api-code {
+  margin: 0 0 16px; padding: 14px; overflow-x: auto;
+  background: var(--surface-2); border-radius: var(--r-sm); font-size: 12.5px; line-height: 1.6;
+}
+.api-code code { background: none; padding: 0; }
+.api-eps { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0 0 16px; font-size: 13px; }
+.api-eps dt { white-space: nowrap; }
+.api-eps dd { margin: 0; color: var(--tx-2); align-self: center; }
+@media (max-width: 767px) {
+  .api-eps { grid-template-columns: 1fr; gap: 2px; }
+  .api-eps dd { margin-bottom: 8px; }
+}

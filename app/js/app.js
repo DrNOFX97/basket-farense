@@ -10,6 +10,7 @@ import jogo from './views/jogo.js';
 import classificacao from './views/classificacao.js';
 import plantel from './views/plantel.js';
 import aovivo from './views/aovivo.js';
+import api from './views/api.js';
 
 const VISTAS = {
   resumo, jogos, jogo, classificacao, plantel, 'ao-vivo': aovivo,
@@ -215,8 +216,34 @@ function render(ep, t, vista, param) {
   window.scrollTo(0, 0);
 }
 
+// Zona da API: não pertence a nenhum escalão, por isso fica fora de VISTAS.
+function renderApi() {
+  if (limpar) {
+    try { limpar(); } catch { /* ignorar */ }
+    limpar = null;
+  }
+  const ep = epoca(arranque().epoca);
+  const root = document.getElementById('conteudo');
+  root.innerHTML = `<div id="vista" class="vista-enter">${api.render()}</div>`;
+  root.removeAttribute('aria-busy');
+  limpar = api.mount(root) || null;
+
+  // A barra lateral continua a mostrar as equipas, mas nenhuma fica activa.
+  desenharSidebar(ep, ep.equipas[0]);
+  document.querySelectorAll('#nav .nav-item.on').forEach((b) => {
+    b.classList.remove('on');
+    b.removeAttribute('aria-current');
+  });
+  desenharMobile(ep, ep.equipas[0]);
+  document.getElementById('tabbar').innerHTML = '';
+  document.title = 'API — Farense Basket';
+  window.scrollTo(0, 0);
+}
+
 async function rotear() {
   const p = parse();
+  document.getElementById('api-link').classList.toggle('on', p.epoca === 'api');
+  if (p.epoca === 'api') { renderApi(); return; }
   let ep = epoca(p.epoca);
   let t = ep ? equipa(ep.id, p.equipa) : null;
 

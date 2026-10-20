@@ -18,9 +18,11 @@ const { default: jogo } = await view('jogo.js');
 const { default: classificacao } = await view('classificacao.js');
 const { default: plantel } = await view('plantel.js');
 const { default: aovivo } = await view('aovivo.js');
+const { default: api } = await view('api.js');
 
 const dados = JSON.parse(fs.readFileSync(path.join(RAIZ, 'data/farense.json'), 'utf8'));
 
+// A vista da API lê localStorage; fora do browser não existe e a vista tem de aguentar.
 let falhas = 0;
 let testes = 0;
 
@@ -60,6 +62,10 @@ for (const ep of dados.epocas) {
     }
   }
 }
+
+// A vista da API lê localStorage, que fora do browser não existe: tem de aguentar.
+globalThis.location = { origin: 'https://exemplo.test' };
+verificar('api', api.render());
 
 console.log(`\n${testes - falhas}/${testes} vistas sem problemas`);
 process.exit(falhas ? 1 : 0);

@@ -22,10 +22,23 @@
   status = 200
   force = true
 
-# API de leitura com chave (netlify/functions/api.mjs). Precisa da variável de
-# ambiente API_KEYS no projecto Netlify.
+# API de leitura com chave e gestão de chaves (netlify/functions/api.mjs).
+# As chaves criadas na página #/api ficam em Netlify Blobs; a variável de
+# ambiente API_KEYS é opcional e serve para chaves fixas.
 [[redirects]]
   from = "/api/v1/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/keys"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/keys/*"
   to = "/.netlify/functions/api"
   status = 200
   force = true
