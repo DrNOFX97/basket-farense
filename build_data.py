@@ -110,7 +110,7 @@ Q_MATCH = """query M($projectKey: String!, $fid: String!) {
 Q_STAND = """query S($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
   standingsByTeam(projectKey: $projectKey, competitionFid: $competitionFid, teamFid: $teamFid) {
     group { fid name }
-    standings { fid name position stats { %s } }
+    standings { fid name position logo stats { %s } }
   } }""" % ' '.join(STAND_M)
 Q_TEAMSTATS = """query T($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
   competitionStatsByTeam(projectKey: $projectKey, competitionFid: $competitionFid, teamFid: $teamFid) {
