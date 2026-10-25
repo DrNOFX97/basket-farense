@@ -9,9 +9,7 @@ Fluxo recuperado por engenharia reversa do APK 2.10.0 (com.nbn23.fansapp):
 
 Credenciais, por ordem de preferência:
   env  SWISH_EMAIL / SWISH_PASSWORD
-  ficheiro creds.txt ao lado deste script   (linha 1 = email, linha 2 = password)
-  /tmp/opencode/swish/creds.txt
-  ~/.config/farense-basket/creds.txt
+  ficheiro .env ao lado deste script   (SWISH_EMAIL=... e SWISH_PASSWORD=...)
 
 O token fica em cache no directório de cache do utilizador, nunca no projecto.
 
@@ -49,11 +47,7 @@ def _cache_dir():
 
 TOKEN_CACHE = os.path.join(_cache_dir(), 'token.json')
 
-CREDS_CANDIDATOS = [
-    os.path.join(BASE, 'creds.txt'),
-    '/tmp/opencode/swish/creds.txt',
-    os.path.expanduser('~/.config/farense-basket/creds.txt'),
-]
+ENV_FILE = os.path.join(BASE, '.env')
 
 
 def _post(url, body, headers=None, timeout=30):
@@ -72,20 +66,33 @@ def _post(url, body, headers=None, timeout=30):
             return e.code, {'raw': raw.decode('utf-8', 'replace')[:400]}
 
 
+def _ler_env(caminho):
+    valores = {}
+    try:
+        linhas = open(caminho, encoding='utf-8').read().splitlines()
+    except OSError:
+        return valores
+    for linha in linhas:
+        linha = linha.strip()
+        if not linha or linha.startswith('#') or '=' not in linha:
+            continue
+        chave, _, valor = linha.partition('=')
+        valores[chave.strip()] = valor.strip().strip("\"'")
+    return valores
+
+
 def credentials():
     email = os.environ.get('SWISH_EMAIL')
     pw = os.environ.get('SWISH_PASSWORD')
+    if not (email and pw):
+        env = _ler_env(ENV_FILE)
+        email = email or env.get('SWISH_EMAIL')
+        pw = pw or env.get('SWISH_PASSWORD')
     if email and pw:
         return email, pw
-    for caminho in CREDS_CANDIDATOS:
-        if os.path.exists(caminho):
-            lines = [l.rstrip('\n') for l in open(caminho, encoding='utf-8')]
-            lines = [l for l in lines if l.strip()]
-            if len(lines) >= 2:
-                return lines[0].strip(), lines[1]
     raise SystemExit(
-        'faltam credenciais: define SWISH_EMAIL/SWISH_PASSWORD '
-        f'ou escreve email e password em duas linhas em {CREDS_CANDIDATOS[0]}')
+        'faltam credenciais: define SWISH_EMAIL e SWISH_PASSWORD '
+        f'no ambiente ou em {ENV_FILE}')
 
 
 class Swish:

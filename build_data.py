@@ -6,7 +6,7 @@ Uso:
     python3 build_data.py 2026/2027
     python3 build_data.py --sem-cache   # ignora cache local
 
-Credenciais: SWISH_EMAIL/SWISH_PASSWORD no ambiente, ou /tmp/opencode/swish/creds.txt
+Credenciais: SWISH_EMAIL/SWISH_PASSWORD no ambiente, ou no ficheiro .env
 """
 import json
 import os

@@ -72,8 +72,7 @@ foto aparece com as iniciais na interface.
 Credenciais, por ordem de preferência:
 
 1. Variáveis de ambiente `SWISH_EMAIL` / `SWISH_PASSWORD`
-2. `creds.txt` ao lado dos scripts (duas linhas: email, password)
-3. `~/.config/farense-basket/creds.txt`
+2. Ficheiro `.env` na raiz do projecto (ver `.env.example`)
 
 O token de sessão é guardado em cache no directório de cache do utilizador
 (`%LOCALAPPDATA%\farense-basket` no Windows, `~/.cache/farense-basket` no
