@@ -1,0 +1,73 @@
+# Refaz data/farense.json a partir da API NBN23 e publica no Netlify.
+#
+# Só faz commit e deploy quando os dados mudaram (o campo "gerado" é ignorado).
+# Segredos necessários: SWISH_EMAIL, SWISH_PASSWORD, NETLIFY_AUTH_TOKEN,
+# NETLIFY_SITE_ID.
+name: Atualizar dados
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: atualizar-dados
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Gerar dados
+        env:
+          SWISH_EMAIL: ${{ secrets.SWISH_EMAIL }}
+          SWISH_PASSWORD: ${{ secrets.SWISH_PASSWORD }}
+        run: |
+          cp data/farense.json "$RUNNER_TEMP/antes.json"
+          python3 build_data.py
+
+      - name: Verificar alterações
+        id: mudou
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          def ler(p):
+              d = json.load(open(p, encoding='utf-8'))
+              d.pop('gerado', None)
+              return d
+          antes = ler(os.environ['RUNNER_TEMP'] + '/antes.json')
+          depois = ler('data/farense.json')
+          print('mudou=' + ('true' if antes != depois else 'false'))
+          PY
+
+      - name: Commit
+        if: steps.mudou.outputs.mudou == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/farense.json
+          git commit -m "chore(dados): atualização automática"
+          git push
+
+      - name: Publicar no Netlify
+        if: steps.mudou.outputs.mudou == 'true'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          npm ci
+          npx --yes netlify-cli@latest deploy --prod --build

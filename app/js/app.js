@@ -561,6 +561,18 @@ async function carregarVersao() {
   } catch { /* sem versão: o rodapé mostra só a data dos dados */ }
 }
 
+// Dados novos: se a publicação mudou (versao.json), volta a ler o JSON e
+// redesenha a vista sem recarregar a página.
+async function verificarDados() {
+  const antes = versao && versao.construido;
+  await carregarVersao();
+  if (!antes || !versao || versao.construido === antes) return;
+  try {
+    await carregar();
+    await rotear();
+  } catch { /* mantém os dados atuais até à próxima verificação */ }
+}
+
 (async function boot() {
   try {
     await Promise.all([carregar(), carregarVersao()]);
@@ -575,6 +587,10 @@ async function carregarVersao() {
   ligarShell();
   await rotear();
   verificarLive();
-  setInterval(verificarLive, 60000);
+  setInterval(verificarLive, 20000);
+  setInterval(verificarDados, 180000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { verificarLive(); verificarDados(); }
+  });
 
 })();

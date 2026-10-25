@@ -25,6 +25,10 @@ const VER = '2.10.0';
 const TTL_VIVO = 4000;
 const TTL_IDLE = 25000;
 const TTL_AGENDA = 5 * 60 * 1000;
+const TTL_AGENDA_JOGO = 30 * 1000;
+// Janela em que um jogo pode estar a decorrer (as horas da API são locais, ver CLAUDE.md).
+const JANELA_ANTES = 30 * 60 * 1000;
+const JANELA_DEPOIS = 4 * 3600 * 1000;
 const PRAZO = 12000;
 const TIMEOUT = 8000;
 
@@ -128,8 +132,26 @@ async function gql(query, variables, tentativa = 0) {
 }
 
 // ------------------------------------------------------------------- agenda --
+// Há jogo que começa já ou que devia estar a decorrer? Então a agenda refresca
+// depressa para apanhar a mudança para LIVE.
+function emJanela(m, agora) {
+  const quando = Date.parse(m && m.date);
+  const ts = (m && m.timeStatus) || {};
+  return !Number.isNaN(quando) && ts.status !== 'FINISHED'
+    && quando - agora < JANELA_ANTES && agora - quando < JANELA_DEPOIS;
+}
+
+function haJogoNaJanela() {
+  if (!agenda.mapa) return false;
+  const agora = Date.now();
+  for (const { m } of agenda.mapa.values()) if (emJanela(m, agora)) return true;
+  return false;
+}
+
 async function carregarAgenda() {
-  if (agenda.mapa && Date.now() - agenda.em < TTL_AGENDA) return agenda.mapa;
+  if (agenda.mapa && Date.now() - agenda.em < (haJogoNaJanela() ? TTL_AGENDA_JOGO : TTL_AGENDA)) {
+    return agenda.mapa;
+  }
 
   const inicio = Date.now();
   const mapa = new Map();
@@ -294,7 +316,9 @@ async function atualizar() {
 
     for (const [fid, entrada] of mapa) {
       const ts = (entrada.m && entrada.m.timeStatus) || {};
-      if (ts.status === 'LIVE') {
+      // LIVE na agenda, ou jogo dentro da janela horária: a agenda pode estar
+      // atrasada, o detalhe diz a verdade.
+      if (ts.status === 'LIVE' || emJanela(entrada.m, agora)) {
         vivos.push(fid);
         continue;
       }
@@ -311,7 +335,7 @@ async function atualizar() {
     for (const fid of vivos) {
       try {
         const j = await jogoDetalhado(fid);
-        if (j) jogos.push(j);
+        if (j && (j.status === 'LIVE' || j.estadoRelogio === 'LIVE')) jogos.push(j);
       } catch (e) {
         erro = `jogo ${fid}: ${e.message}`;
       }
