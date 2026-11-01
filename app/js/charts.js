@@ -204,7 +204,7 @@ export function linhaEvolucao(j, largura) {
   const area = `${linha} L${px(fim).toFixed(1)} ${y0.toFixed(1)} L${px(0).toFixed(1)} ${y0.toFixed(1)} Z`;
 
   const marcas = pts.slice(1).map((p) => `<g><title>${esc(
-    `P${p.per} ${F.relogio(p.tempo)} · Farense ${p.nos}–${p.eles} · ${p.d > 0 ? '+' : ''}${p.d}`,
+    `P${p.per} ${F.relogioMs(p.tempo)} · Farense ${p.nos}–${p.eles} · ${p.d > 0 ? '+' : ''}${p.d}`,
   )}</title><circle class="g-ponto m" cx="${px(p.t).toFixed(1)}" cy="${py(p.d).toFixed(1)}" r="2.6"/></g>`).join('');
 
   return `<svg class="g-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"

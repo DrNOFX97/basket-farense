@@ -84,6 +84,14 @@ export function relogio(v) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+// Tempo de uma acção: milissegundos que faltam no período (600000 no início).
+// Ao contrário de relogio(), nunca o interpreta como segundos.
+export function relogioMs(ms) {
+  if (ms == null) return '';
+  const s = Math.floor(Math.max(0, ms) / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 export function pct(feitos, tentados) {
   if (!tentados) return null;
   return Math.round((feitos / tentados) * 100);

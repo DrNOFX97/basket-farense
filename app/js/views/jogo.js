@@ -237,7 +237,7 @@ function pbp(j, nomes) {
 
     linhas.push(`<tr class="${cls}">
       <td class="per">P${per}</td>
-      <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogio(t)}</td>
+      <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogioMs(t)}</td>
       <td class="name">${esc(nome)}</td>
       <td>${esc(txt)}${a[10] ? ' <small class="ed" title="corrigida pela mesa">✎</small>' : ''}</td>
       <td class="sc">${code === 'POINTS' && ok ? `${nos}-${eles}` : ''}</td>
