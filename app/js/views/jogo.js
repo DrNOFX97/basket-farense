@@ -1,5 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
+import * as G from '../charts.js';
 import { esc, card, vazio, linhaCmp, logo, avatar } from '../ui.js';
 
 const TIPO = {
@@ -218,7 +219,11 @@ export default {
     const nomes = D.nomesJogo(j);
 
     const corpo = j.detalhe
-      ? `<div style="margin-top:14px">${comparador(j)}</div>
+      ? `${(j.accoes || []).some((a) => a[4] === 'POINTS') ? `<div style="margin-top:14px">${card('Evolução do marcador', `<div class="card-b chart-b">
+             <div class="grafico" id="grafico-evolucao" role="img"></div>
+             <p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>
+           </div>`)}</div>` : ''}
+         <div style="margin-top:14px">${comparador(j)}</div>
          <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora))}</div>
          <div class="card" style="margin-top:14px">
            <div class="card-h">
@@ -244,6 +249,28 @@ export default {
     if (!j || !j.detalhe) return;
     const nomes = D.nomesJogo(j);
 
+    const graf = root.querySelector('#grafico-evolucao');
+    let largura = 0;
+    const desenhar = () => {
+      const w = Math.round(graf.clientWidth);
+      if (!w || w === largura) return;
+      largura = w;
+      graf.innerHTML = G.linhaEvolucao(j, w);
+      graf.setAttribute('aria-label', G.descreverEvolucao(j));
+    };
+    let limpar;
+    if (graf) {
+      desenhar();
+      if (typeof ResizeObserver !== 'undefined') {
+        const obs = new ResizeObserver(desenhar);
+        obs.observe(graf);
+        limpar = () => obs.disconnect();
+      } else {
+        window.addEventListener('resize', desenhar);
+        limpar = () => window.removeEventListener('resize', desenhar);
+      }
+    }
+
     root.querySelectorAll('[data-pbp]').forEach((b) => {
       b.addEventListener('click', () => {
         filtro = b.dataset.pbp;
@@ -253,5 +280,6 @@ export default {
       });
     });
 
+    return limpar;
   },
 };

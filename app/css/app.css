@@ -1325,3 +1325,7 @@ tr.total td.name { color: var(--tx-2); }
 .api-prompt summary { cursor: pointer; padding: 12px 0; font-size: 13.5px; font-weight: 600; }
 .api-prompt .api-code { max-height: 340px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .api-prompt .api-btn { margin-bottom: 14px; }
+
+.g-area { stroke: none; }
+.g-area.m { fill: var(--gold); opacity: .22; }
+.g-area.s { fill: var(--loss); opacity: .22; }
