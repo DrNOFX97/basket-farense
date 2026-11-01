@@ -63,19 +63,19 @@ function cabecalhoBox(nome, lado) {
   return `<div class="card-h"><h2>${esc(nome)}</h2><span class="side">${lado}</span></div>`;
 }
 
-function tabelaBox(lista) {
+function tabelaBox(lista, iniciais = new Set()) {
   if (!lista || !lista.length) return vazio('Sem boxscore', 'Ainda não há estatísticas individuais deste jogo.');
   const jogadores = [...lista].sort((a, b) => (b.min || 0) - (a.min || 0) || (b.pts || 0) - (a.pts || 0));
 
   const linhas = jogadores.map((p) => `<tr>
     <td class="pos">${esc(p.num || '-')}</td>
-    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
+    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span>${iniciais.has(String(p.fid)) ? ' <small class="ini" title="Cinco inicial">★</small>' : ''}</span></td>
     <td>${F.mmss(p.min)}</td>
     <td><b>${p.pts ?? 0}</b></td>
     <td>${p.c2}</td>
     <td>${p.c3}</td>
     <td>${p.cll}/${p.cll + p.fll}</td>
-    <td>${p.ft}</td>
+    <td class="${p.ft >= 5 ? 'f5' : p.ft === 4 ? 'f4' : ''}"${p.ft >= 5 ? ' title="Excluído por 5 faltas"' : p.ft === 4 ? ' title="4 faltas"' : ''}>${p.ft}</td>
     <td>${p.fr}</td>
     <td>${p.val}</td>
     <td>${p.pm > 0 ? '+' : ''}${p.pm}</td>
@@ -108,6 +108,30 @@ function tabelaBox(lista) {
     <tbody>${linhas}${total}</tbody>
   </table></div>
   <p class="box-leg"><b>MIN</b> minutos · <b>PTS</b> pontos · <b>2P / 3P</b> cestos convertidos · <b>LL</b> lances livres convertidos/tentados · <b>FT</b> faltas cometidas · <b>FR</b> faltas sofridas · <b>VAL</b> valorização · <b>+/−</b> diferença de pontos com o jogador em campo</p>`;
+}
+
+function destaques(j, r) {
+  const d = r.destaques;
+  const item = (rotulo, p, k, sinal = false) => (p ? `<div class="kpi"><span>${rotulo}</span>
+    <b>${esc(p.nome)}</b><span>${sinal && p[k] > 0 ? '+' : ''}${p[k]}</span></div>` : '');
+  return card('Destaques', `<div class="card-b kpis kpis-sm">
+    ${item('Melhor marcador', d.pts, 'pts')}
+    ${item('Melhor valorização', d.val, 'val')}
+    ${item('Melhor +/−', d.pm, 'pm', true)}
+  </div>`);
+}
+
+function porPeriodo(r) {
+  if (!r.periodos.length) return '';
+  const soma = (k) => r.periodos.reduce((s, p) => s + (p[k] || 0), 0);
+  const linha = (rot, p) => `<tr><td>${rot}</td><td><b>${p.pts}</b></td><td>${p.sof}</td><td>${p.faltas}</td><td>${p.timeouts}</td></tr>`;
+  return card('Por período', `<div class="tw"><table>
+    <thead><tr><th scope="col">Período</th><th scope="col" title="Pontos marcados">Marc.</th>
+      <th scope="col" title="Pontos sofridos">Sof.</th><th scope="col" title="Faltas cometidas">Faltas</th>
+      <th scope="col" title="Timeouts pedidos">TO</th></tr></thead>
+    <tbody>${r.periodos.map((p) => linha(`P${p.per}`, p)).join('')}
+    <tr class="total"><td>Total</td><td><b>${soma('pts')}</b></td><td>${soma('sof')}</td><td>${soma('faltas')}</td><td>${soma('timeouts')}</td></tr>
+    </tbody></table></div>`);
 }
 
 function comparador(j) {
@@ -216,6 +240,7 @@ export default {
     if (!j) return vazio('Jogo não encontrado', 'Este jogo não pertence a esta equipa.');
 
     filtro = 'todos';
+    const r = D.resumoFarense(j);
     const nomes = D.nomesJogo(j);
 
     const corpo = j.detalhe
@@ -223,8 +248,9 @@ export default {
              <div class="grafico" id="grafico-evolucao" role="img"></div>
              <p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>
            </div>`)}</div>` : ''}
+         <div class="grid grid-2" style="margin-top:14px">${porPeriodo(r)}${destaques(j, r)}</div>
          <div style="margin-top:14px">${comparador(j)}</div>
-         <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora))}</div>
+         <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora, r.iniciais))}</div>
          <div class="card" style="margin-top:14px">
            <div class="card-h">
              <h2>Play-by-play</h2>

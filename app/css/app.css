@@ -683,6 +683,9 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 }
 .sb-meta b { color: var(--win); font-weight: 650; }
 
+.ini { color: var(--gold); font-size: 11px; }
+td.f4 { color: var(--tx); font-weight: 650; }
+td.f5 { color: var(--loss); font-weight: 750; }
 .res { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 11px; font-weight: 750; letter-spacing: .3px; text-transform: uppercase; margin-right: 6px; }
 .res-v { background: var(--win-dim); color: var(--win); }
 .res-d { background: var(--loss-dim); color: var(--loss); }

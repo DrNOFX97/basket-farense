@@ -122,6 +122,34 @@ export function accoesOrdenadas(j) {
     || String(a[9] || '').localeCompare(String(b[9] || '')));
 }
 
+// Leitura do jogo só do lado do Farense: cinco inicial, destaques e totais por período.
+export function resumoFarense(j) {
+  const lado = j.emCasa ? 'casa' : 'fora';
+  const meu = String(j.emCasa ? j.casaFid : j.foraFid);
+  const jog = (j.jogadores && j.jogadores[lado]) || [];
+  const minhas = accoesOrdenadas(j).filter((a) => String(a[8]) === meu);
+
+  // O cinco inicial entra em campo no relógio de abertura do 1.º período.
+  const entradas = minhas.filter((a) => a[0] === 1 && a[4] === 'SWAP' && a[5] === 'SWAP_IN');
+  const abertura = Math.max(0, ...entradas.map((a) => a[1] || 0));
+  const iniciais = new Set(entradas.filter((a) => (a[1] || 0) === abertura).map((a) => String(a[2])));
+
+  const melhor = (k) => jog.reduce((m, p) => ((p[k] || 0) > (m ? m[k] || 0 : -Infinity) ? p : m), null);
+  const periodos = (j.parciais || []).map(([per, casa, fora]) => ({
+    per,
+    pts: j.emCasa ? casa : fora,
+    sof: j.emCasa ? fora : casa,
+    faltas: minhas.filter((a) => a[0] === per && a[4] === 'FOUL').length,
+    timeouts: minhas.filter((a) => a[0] === per && a[4] === 'TIMEOUT').length,
+  }));
+
+  return {
+    iniciais,
+    periodos,
+    destaques: { pts: melhor('pts'), val: melhor('val'), pm: melhor('pm') },
+  };
+}
+
 export function cronologia(j, teamFid = null) {
   const acts = accoesOrdenadas(j).filter((a) => !teamFid || String(a[8]) === String(teamFid));
   const antes = new Map();
