@@ -1033,6 +1033,13 @@ table.box tbody tr:hover td.name { background: var(--surface-2); }
 
 .prox-adv-sm { font-size: 15px; font-weight: 600; color: var(--tx-2); }
 
+.prox-link {
+  display: flex; width: 100%; background: none; border: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.prox-link:hover { background: var(--surface-2); }
+.prox-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.prox-ver { margin-top: 9px; font-size: 13px; font-weight: 600; color: var(--accent); }
 .prox-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
 
 .tag {

@@ -40,7 +40,8 @@ function cartaoUltimo(t, j, mapaL) {
   const advFid = j.emCasa ? j.foraFid : j.casaFid;
   const forma = D.forma(t, 5);
   return card('Último resultado', `
-    <div class="card-b prox">
+    <button class="card-b prox prox-link" type="button" data-jogo="${esc(j.fid)}"
+      aria-label="Abrir o jogo: ${esc(adv)}, ${j.meus} a ${j.adv}">
       <div class="prox-data">${esc(F.dataCurta(j.data))} · ${j.emCasa ? 'em casa' : 'fora'}</div>
       <div class="res-linha">
         ${pill(j.resultado)}
@@ -48,7 +49,8 @@ function cartaoUltimo(t, j, mapaL) {
       </div>
       <div class="prox-adv prox-adv-sm">${logo(mapaL.get(String(advFid)), 'tlogo-sm')}${esc(adv)}</div>
       ${parciais(j)}
-    </div>
+      <div class="prox-ver">Ver jogo →</div>
+    </button>
     <div class="card-h" style="border-top:1px solid var(--line);border-bottom:0">
       <h2>Forma</h2>
       <div class="forma">${forma.map((x) => pill(x.resultado)).join('') || '<span class="mut">—</span>'}</div>
