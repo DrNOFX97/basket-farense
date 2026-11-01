@@ -65,7 +65,7 @@ class Estado:
         self.lock = threading.Lock()
         self.schedules = {}
         self.tsched = 0.0
-        self.snap = {'atualizado': None, 'jogos': [], 'proximos': [], 'erro': None}
+        self.snap = {'atualizado': None, 'jogos': [], 'erro': None}
         self.ultimo_erro = None
 
     # -- agenda ---------------------------------------------------------
@@ -89,24 +89,8 @@ class Estado:
 
     def candidatos(self):
         sched = self.agenda()
-        agora = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
-        live, futuros = [], []
-        for fid, e in sched.items():
-            ts = (e['m'].get('timeStatus') or {})
-            if ts.get('status') == 'LIVE':
-                live.append(fid)
-                continue
-            iso = e['m'].get('date') or ''
-            if not iso:
-                continue
-            try:
-                dt = datetime.datetime.strptime(iso[:19], '%Y-%m-%dT%H:%M:%S')
-            except ValueError:
-                continue
-            if ts.get('status') == 'NOT_STARTED' and dt > agora - datetime.timedelta(hours=2):
-                futuros.append((dt, fid))
-        futuros.sort()
-        return live, [f for _, f in futuros[:24]]
+        return [fid for fid, e in sched.items()
+                if (e['m'].get('timeStatus') or {}).get('status') == 'LIVE']
 
     # -- jogo -----------------------------------------------------------
     def jogo(self, fid):
@@ -174,16 +158,14 @@ class Estado:
     # -- ciclo ----------------------------------------------------------
     def atualizar(self):
         try:
-            live, futuros = self.candidatos()
-            jogos = [j for j in (self.jogo(f) for f in live) if j]
-            proximos = [j for j in (self.jogo(f) for f in futuros) if j]
+            jogos = [j for j in (self.jogo(f) for f in self.candidatos()) if j]
             self.ultimo_erro = None
         except Exception as e:
-            jogos, proximos = [], []
+            jogos = []
             self.ultimo_erro = str(e)
         snap = {
             'atualizado': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'jogos': jogos, 'proximos': proximos, 'erro': self.ultimo_erro,
+            'jogos': jogos, 'erro': self.ultimo_erro,
         }
         with self.lock:
             self.snap = snap

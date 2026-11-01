@@ -134,11 +134,11 @@ class Handler(BaseHTTPRequestHandler):
         if caminho == '/api/live':
             if estado is None:
                 return self.json({'atualizado': None, 'jogos': [],
-                                  'proximos': [], 'erro': 'ao vivo desligado'})
+                                  'erro': 'ao vivo desligado'})
             with estado.lock:
                 snap = estado.snap
             return self.json(snap or {'atualizado': None, 'jogos': [],
-                                      'proximos': [], 'erro': 'a carregar'})
+                                      'erro': 'a carregar'})
 
         if caminho == '/api/meta':
             d = ler_json()

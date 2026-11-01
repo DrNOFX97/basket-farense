@@ -276,40 +276,10 @@ async function jogoDetalhado(fid) {
   return out;
 }
 
-// Próximo jogo montado a partir da agenda: sem pedido extra por jogo.
-function jogoResumido(fid) {
-  const entrada = agenda.mapa && agenda.mapa.get(String(fid));
-  if (!entrada) return null;
-
-  const { m, equipa } = entrada;
-  const ts = m.timeStatus || {};
-  const total = (m.scores && m.scores.total) || {};
-
-  return {
-    fid: String(fid),
-    status: m.status || ts.status,
-    inicio: m.date,
-    jornada: null,
-    periodo: ts.period,
-    relogio: ts.time,
-    casa: (m.homeTeam || {}).name,
-    fora: (m.awayTeam || {}).name,
-    casaFid: (m.homeTeam || {}).id,
-    foraFid: (m.awayTeam || {}).id,
-    pontos: [total.homeScore ?? 0, total.awayScore ?? 0],
-    parciais: [],
-    lideranca: null,
-    jogadores: { casa: [], fora: [] },
-    accoes: [],
-    equipa: campoEquipa(equipa),
-  };
-}
-
 // ------------------------------------------------------------------ refresh --
 async function atualizar() {
   let erro = null;
   const jogos = [];
-  const proximos = [];
 
   try {
     const mapa = await carregarAgenda();
@@ -317,7 +287,6 @@ async function atualizar() {
 
     const agora = Date.now();
     const vivos = [];
-    const futuros = [];
 
     for (const [fid, entrada] of mapa) {
       const ts = (entrada.m && entrada.m.timeStatus) || {};
@@ -327,15 +296,7 @@ async function atualizar() {
         vivos.push(fid);
         continue;
       }
-      if (ts.status === 'NOT_STARTED' && entrada.m && entrada.m.date) {
-        const quando = Date.parse(entrada.m.date);
-        if (!Number.isNaN(quando) && quando > agora - 2 * 3600 * 1000) {
-          futuros.push([quando, fid]);
-        }
-      }
     }
-
-    futuros.sort((a, b) => a[0] - b[0]);
 
     for (const fid of vivos) {
       try {
@@ -345,11 +306,6 @@ async function atualizar() {
         erro = `jogo ${fid}: ${e.message}`;
       }
     }
-
-    for (const [, fid] of futuros.slice(0, 24)) {
-      const j = jogoResumido(fid);
-      if (j) proximos.push(j);
-    }
   } catch (e) {
     erro = e.message || String(e);
   }
@@ -357,7 +313,6 @@ async function atualizar() {
   instantaneo = {
     atualizado: agoraTexto(),
     jogos,
-    proximos,
     erro,
   };
   instantaneoEm = Date.now();
@@ -386,7 +341,7 @@ export const handler = async () => {
 
     if (emCurso) {
       await emCurso.catch(() => {});
-      return resposta(instantaneo || { atualizado: null, jogos: [], proximos: [], erro: null });
+      return resposta(instantaneo || { atualizado: null, jogos: [], erro: null });
     }
 
     emCurso = atualizar();
@@ -401,7 +356,6 @@ export const handler = async () => {
     return resposta({
       atualizado: instantaneo ? instantaneo.atualizado : null,
       jogos: instantaneo ? instantaneo.jogos : [],
-      proximos: instantaneo ? instantaneo.proximos : [],
       erro: e.message || String(e),
     });
   }

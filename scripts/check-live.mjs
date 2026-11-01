@@ -17,17 +17,16 @@ const t1 = Date.now();
 const d = JSON.parse(r.body);
 
 console.log(`1a chamada: ${r.statusCode} em ${t1 - t0} ms`);
-console.log(`  atualizado=${d.atualizado} jogos=${d.jogos.length} proximos=${d.proximos.length} erro=${d.erro}`);
+console.log(`  atualizado=${d.atualizado} jogos=${d.jogos.length} erro=${d.erro}`);
+if ('proximos' in d) throw new Error('a resposta já não deve ter "proximos"');
 
-const p = d.proximos[0];
-if (p) {
+const j = d.jogos[0];
+if (j) {
   console.log('  exemplo:', JSON.stringify({
-    fid: p.fid, inicio: p.inicio, casa: p.casa, fora: p.fora,
-    casaFid: p.casaFid, foraFid: p.foraFid, equipa: p.equipa.nome,
-    pontos: p.pontos, status: p.status,
+    fid: j.fid, casa: j.casa, fora: j.fora, equipa: j.equipa.nome,
+    pontos: j.pontos, periodo: j.periodo, status: j.status,
   }));
 }
-console.log('  escalões distintos nos próximos:', new Set(d.proximos.map((x) => x.equipa.teamFid)).size);
 
 const t2 = Date.now();
 await handler({});
