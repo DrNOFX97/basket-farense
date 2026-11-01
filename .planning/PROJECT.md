@@ -49,3 +49,12 @@ Fora:
 3. Todas as vistas carregam sem dependencias externas.
 4. Nenhum erro de consola; tabelas legiveis a 360 px de largura.
 5. Modo ao vivo mostra marcador e accoes sem refrescar a pagina.
+
+## Por fazer (decisao adiada)
+
+- **Eventos manuais** do que a mesa nao regista (ressaltos, assistencias,
+  roubos, desarmes, perdas, lancamentos falhados). Devem aparecer no feed ao
+  vivo e, depois, nos detalhes do jogo realizado. Por decidir: onde se insere
+  (so no localhost ou tambem no site publicado), onde se guarda (ideia:
+  `data/manual.json` junto ao build) e como se regista (botoes por jogador
+  durante o jogo ou depois). A API e so de leitura.
