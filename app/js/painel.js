@@ -8,7 +8,7 @@
 import * as A from './analise.js';
 import * as G from './charts.js';
 import * as F from './format.js';
-import { esc, avatar, linhaCmp, card } from './ui.js';
+import { esc, avatar, linhaCmp, card, jogadorBtn } from './ui.js';
 
 const estado = { aba: 'comp', per: 'todos' };
 
@@ -112,10 +112,13 @@ const METRICAS = [
   ['min', 'Minutos', true, (v) => F.mmss(v)],
 ];
 
-function celulaLider(p, fmt) {
+function celulaLider(p, fmt, clicavel) {
   if (!p) return '<div class="lid-c vazio">—</div>';
   const mais = p.empatados ? ` <small title="Empatado com mais ${p.empatados}">+${p.empatados}</small>` : '';
-  return `<div class="lid-c">${avatar(p.foto, p.nome, 'pavatar-sm')}<span class="lid-n">${esc(p.nome)}${mais}</span><b>${fmt(p.valor)}</b></div>`;
+  const nome = clicavel && p.fid
+    ? `<button type="button" class="pname pname-btn lid-n" data-jogador="${esc(p.fid)}" aria-haspopup="dialog" title="Ver o cartão de ${esc(p.nome)}">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></button>${mais}`
+    : `${avatar(p.foto, p.nome, 'pavatar-sm')}<span class="lid-n">${esc(p.nome)}${mais}</span>`;
+  return `<div class="lid-c">${nome}<b>${fmt(p.valor)}</b></div>`;
 }
 
 function lideresPainel(j, per) {
@@ -124,7 +127,7 @@ function lideresPainel(j, per) {
   const linhas = METRICAS.map(([k, rotulo, porPer, fmt]) => {
     const jogoInteiro = per !== 'todos' && !porPer;
     return `<div class="lid-k">${rotulo}${jogoInteiro ? ' <small>(jogo inteiro)</small>' : ''}</div>
-      ${celulaLider(nos[k], fmt)}${celulaLider(eles[k], fmt)}`;
+      ${celulaLider(nos[k], fmt, true)}${celulaLider(eles[k], fmt, false)}`;
   }).join('');
   return `<div class="card-b">
     <div class="lid">
@@ -174,7 +177,7 @@ function cartaoTempo(j, per) {
   const dur = per === 'todos' ? null : A.duracaoPeriodo(per) / 1000;
   const linhas = jog.map((p) => `<tr>
     <td class="pos">${esc(p.num || '-')}</td>
-    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
+    <td class="name">${jogadorBtn(p.fid, p.nome, p.foto)}</td>
     <td>${F.mmss(p.seg)}</td>
     ${dur ? `<td>${Math.round((p.seg / dur) * 100)}%</td>` : ''}
   </tr>`).join('');
@@ -238,7 +241,7 @@ function cartaoLL(j, per) {
   const t = lista.reduce((s, x) => ({ ll: s.ll + x.ll, llf: s.llf + x.llf }), { ll: 0, llf: 0 });
   const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : '—');
   const linhas = lista.map((p) => `<tr>
-    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
+    <td class="name">${p.fid ? jogadorBtn(p.fid, p.nome, p.foto) : esc(p.nome)}</td>
     <td><b>${p.ll}</b></td><td>${p.llf}</td><td>${pct(p.ll, p.tentados)}</td>
   </tr>`).join('');
   return card('Lances livres', `<div class="tw"><table>

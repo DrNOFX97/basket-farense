@@ -336,3 +336,27 @@ export function posicao(t) {
   const l = c.linhas.find((x) => x.eu);
   return l ? l.pos : null;
 }
+
+// Jogos em que o jogador consta do boxscore, por ordem de data, com os números
+// de cada um. Serve o cartão de jogador (evolução jogo a jogo).
+export function jogosJogador(t, fid) {
+  const out = [];
+  for (const j of t.jogos) {
+    if (!j.detalhe) continue;
+    const emCasa = String(j.casaFid) === String(t.teamFid);
+    const lista = (j.jogadores && j.jogadores[emCasa ? 'casa' : 'fora']) || [];
+    const p = lista.find((x) => String(x.fid) === String(fid));
+    if (!p) continue;
+    out.push({
+      fid: j.fid, data: j.data, jornada: j.jornada, emCasa,
+      adv: emCasa ? j.fora : j.casa, resultado: j.resultado,
+      pts: p.pts || 0, val: p.val || 0, min: p.min || 0, ft: p.ft || 0,
+      cll: p.cll || 0, fll: p.fll || 0, c2: p.c2 || 0, c3: p.c3 || 0,
+    });
+  }
+  out.sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  return out.map((g, i) => {
+    const m = /(\d+)/.exec(g.jornada || '');
+    return { ...g, rot: `J${m ? m[1] : i + 1}` };
+  });
+}

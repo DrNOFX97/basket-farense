@@ -33,6 +33,12 @@ export function avatar(src, nome, classe = '') {
   </span>`;
 }
 
+// Nome de jogador que abre o cartão (ver jogador.js). Botão, para ser
+// acessível por teclado; o nome visível é o nome acessível.
+export function jogadorBtn(fid, nome, foto, classe = 'pavatar-sm') {
+  return `<button type="button" class="pname pname-btn" data-jogador="${esc(fid)}" aria-haspopup="dialog" title="Ver o cartão de ${esc(nome)}">${avatar(foto, nome, classe)}<span>${esc(nome)}</span></button>`;
+}
+
 export function vazio(titulo, texto) {
   return `<div class="empty"><b>${esc(titulo)}</b>${texto ? esc(texto) : ''}</div>`;
 }

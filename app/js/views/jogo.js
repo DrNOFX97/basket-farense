@@ -1,7 +1,7 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
 import * as P from '../painel.js';
-import { esc, card, vazio, linhaCmp, logo, avatar } from '../ui.js';
+import { esc, card, vazio, linhaCmp, logo, jogadorBtn } from '../ui.js';
 
 const TIPO = {
   FOUL: 'Falta',
@@ -66,13 +66,13 @@ function cabecalhoBox(nome, lado) {
   return `<div class="card-h"><h2>${esc(nome)}</h2><span class="side">${lado}</span></div>`;
 }
 
-function tabelaBox(lista, iniciais = new Set()) {
+function tabelaBox(lista, iniciais = new Set(), lado = 'nos') {
   if (!lista || !lista.length) return vazio('Sem boxscore', 'Ainda não há estatísticas individuais deste jogo.');
   const jogadores = [...lista].sort((a, b) => (b.min || 0) - (a.min || 0) || (b.pts || 0) - (a.pts || 0));
 
   const linhas = jogadores.map((p) => `<tr>
     <td class="pos">${esc(p.num || '-')}</td>
-    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span>${iniciais.has(String(p.fid)) ? ' <small class="ini" title="Cinco inicial">★</small>' : ''}</span></td>
+    <td class="name">${p.fid && lado === 'nos' ? jogadorBtn(p.fid, p.nome, p.foto) : `<span class="pname"><span>${esc(p.nome)}</span></span>`}${iniciais.has(String(p.fid)) ? ' <small class="ini" title="Cinco inicial">★</small>' : ''}</td>
     <td>${F.mmss(p.min)}</td>
     <td><b>${p.pts ?? 0}</b></td>
     <td>${p.c2}</td>

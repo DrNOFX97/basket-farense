@@ -2,6 +2,7 @@ import {
   carregar, dados, epocas, epoca, equipa, arranque, posicao,
 } from './data.js';
 import * as F from './format.js';
+import { ligar as ligarJogador } from './jogador.js';
 import { esc } from './ui.js';
 
 import resumo from './views/resumo.js';
@@ -538,6 +539,7 @@ function ligarShell() {
   });
 
   ligarSheet();
+  ligarJogador(contexto);
 
   document.getElementById('sel-epoca').addEventListener('change', (e) => {
     trocarEpoca(e.target.value);

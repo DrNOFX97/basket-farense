@@ -157,6 +157,25 @@ P.definirEstado('comp', 'todos');
 
 verificar('ao-vivo sem jogos', desenharLive(dados.epocas[0].equipas[0], { atualizado: null, erro: null }, []));
 
+// Cartão de jogador: cada jogador de cada plantel, com cada métrica do gráfico.
+const Jg = await import(pathToFileURL(path.join(RAIZ, 'app/js/jogador.js')).href);
+const Dd = await import(pathToFileURL(path.join(RAIZ, 'app/js/data.js')).href);
+for (const ep of dados.epocas) {
+  for (const t of ep.equipas) {
+    for (const a of Dd.statsPlantel(t)) {
+      for (const m of ['pts', 'val', 'min', 'ft']) {
+        verificar(`${ep.id}/${t.id} cartão ${a.nome} ${m}`, Jg.cartaoHTML(t, ep.id, a.fid, m));
+      }
+      const serie = G.serieJogador(Dd.jogosJogador(t, a.fid), 'val');
+      if (serie.length) for (const w of [260, 390, 440]) verificar(`  gráfico ${a.nome} ${w}`, G.barrasJogador(serie, w) + G.descreverJogador(serie, 'Valorização'));
+      // Os pontos do cartão têm de coincidir com a soma dos jogos.
+      const soma = Dd.jogosJogador(t, a.fid).reduce((s, g) => s + g.pts, 0);
+      testes += 1;
+      if (soma !== a.pts) { falhas += 1; console.error(`  FALHA pontos ${a.nome}: jogos ${soma} ≠ época ${a.pts}`); }
+    }
+  }
+}
+
 // A vista da API lê localStorage, que fora do browser não existe: tem de aguentar.
 globalThis.location = { origin: 'https://exemplo.test' };
 verificar('api', api.render());

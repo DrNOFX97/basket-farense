@@ -338,3 +338,79 @@ export function barrasLideranca(j, largura) {
     ${row(0, 'SC Farense', nos, 'a')}${row(1, nomeAdv || 'Adversário', eles, 'b')}
   </svg>`;
 }
+
+// ------------------------------------------------------------ jogador (época)
+const ROTULOS_METRICA = { pts: 'Pontos', val: 'Valorização', min: 'Minutos', ft: 'Faltas' };
+
+// Série para o gráfico jogo a jogo. Minutos em minutos decimais (o título
+// mostra mm:ss).
+export function serieJogador(jogos, metrica) {
+  return jogos.map((g) => ({
+    rot: g.rot,
+    v: metrica === 'min' ? Math.round((g.min / 60) * 10) / 10 : (Number(g[metrica]) || 0),
+    titulo: `${g.rot} · ${g.adv}: ${metrica === 'min' ? F.mmss(g.min) : g[metrica]} ${ROTULOS_METRICA[metrica].toLowerCase()}`,
+  }));
+}
+
+export function mediaSerie(serie) {
+  return serie.length ? Math.round((serie.reduce((s, x) => s + x.v, 0) / serie.length) * 10) / 10 : 0;
+}
+
+export function descreverJogador(serie, nome) {
+  if (!serie.length) return `${nome} jogo a jogo: sem jogos.`;
+  return `${nome} jogo a jogo. ${serie.map((s) => `${s.rot}: ${s.v}`).join('; ')}.`;
+}
+
+// Barras jogo a jogo, com linha tracejada na média. Aceita valores negativos
+// (valorização).
+export function barrasJogador(serie, largura) {
+  if (!serie.length) return '';
+  const compacto = largura < 420;
+  const H = compacto ? 170 : 190;
+  const M = { top: 20, right: 10, bottom: 24, left: compacto ? 28 : 34 };
+  const W = Math.max(240, Math.round(largura));
+  const plotW = W - M.left - M.right;
+  const plotH = H - M.top - M.bottom;
+
+  const vs = serie.map((s) => s.v);
+  const max = Math.max(0, ...vs);
+  const min = Math.min(0, ...vs);
+  const amp = Math.max(4, max - min);
+  const passo = amp <= 10 ? 2 : amp <= 20 ? 5 : amp <= 50 ? 10 : 20;
+  const hi = Math.max(passo, Math.ceil(max / passo) * passo);
+  const lo = min < 0 ? Math.floor(min / passo) * passo : 0;
+  const py = (v) => M.top + ((hi - v) / (hi - lo)) * plotH;
+  const y0 = py(0);
+
+  const ticks = [];
+  for (let v = lo; v <= hi; v += passo) ticks.push(v);
+  const grade = ticks.map((v) => `<line class="g-grade${v === 0 ? ' zero' : ''}" x1="${M.left}" y1="${py(v).toFixed(1)}" x2="${W - M.right}" y2="${py(v).toFixed(1)}"/>`).join('');
+  const eixoY = ticks.map((v) => `<text class="g-eixo" x="${M.left - 6}" y="${py(v).toFixed(1)}" text-anchor="end" dominant-baseline="middle">${v}</text>`).join('');
+
+  const faixa = plotW / serie.length;
+  const bw = Math.max(6, Math.min(30, faixa * 0.6));
+  const mostraValor = faixa >= 24;
+  const barras = serie.map((s, i) => {
+    const cx = M.left + (i + 0.5) * faixa;
+    const y = py(Math.max(s.v, 0));
+    const h = Math.max(s.v ? 2 : 0, Math.abs(py(s.v) - y0));
+    const yTopo = s.v >= 0 ? y0 - h : y0;
+    const yTexto = s.v >= 0 ? yTopo - 5 : yTopo + h + 12;
+    return `<g><title>${esc(s.titulo)}</title>
+      <rect class="g-bar a" x="${(cx - bw / 2).toFixed(1)}" y="${yTopo.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2"/>
+      ${mostraValor ? `<text class="g-valor" x="${cx.toFixed(1)}" y="${yTexto.toFixed(1)}" text-anchor="middle">${s.v}</text>` : ''}
+    </g>`;
+  }).join('');
+
+  const maxEtiquetas = Math.max(3, Math.floor(plotW / 34));
+  const salto = Math.max(1, Math.ceil(serie.length / maxEtiquetas));
+  const eixoX = serie.map((s, i) => (i % salto === 0 || i === serie.length - 1
+    ? `<text class="g-eixo" x="${(M.left + (i + 0.5) * faixa).toFixed(1)}" y="${H - 7}" text-anchor="middle">${esc(s.rot)}</text>` : '')).join('');
+
+  const media = vs.reduce((s, v) => s + v, 0) / vs.length;
+  const linhaMedia = `<line class="g-media" x1="${M.left}" y1="${py(media).toFixed(1)}" x2="${W - M.right}" y2="${py(media).toFixed(1)}"/>`;
+
+  return `<svg class="g-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="presentation" focusable="false" aria-hidden="true">
+    ${grade}${eixoY}${barras}${linhaMedia}${eixoX}
+  </svg>`;
+}

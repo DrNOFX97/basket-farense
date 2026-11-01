@@ -1385,3 +1385,66 @@ td small { color: var(--tx-3); }
 .elim { color: var(--loss); font-style: normal; font-weight: 650; }
 tr.mut td { color: var(--tx-3); }
 td.nome-curto { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------- cartão de jogador */
+.pavatar-xl { width: 72px; height: 72px; font-size: 20px; }
+.pname-btn {
+  appearance: none; background: none; border: 0; padding: 0; margin: 0;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+  border-radius: 6px;
+}
+.pname-btn:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+.pname-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lid-c .pname-btn { flex: 1; min-width: 0; }
+body.sem-scroll { overflow: hidden; }
+
+.jcard-painel { max-height: 90vh; }
+.jc-corpo { overflow-y: auto; padding: 4px 18px 22px; overscroll-behavior: contain; }
+.jc-fechar {
+  position: absolute; top: 8px; right: 10px; width: 44px; height: 44px;
+  display: grid; place-items: center; background: none; border: 0; color: var(--tx-2);
+  border-radius: 999px; cursor: pointer;
+}
+.jc-fechar:hover { background: var(--hl); color: var(--tx); }
+.jc-fechar:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.jc-fechar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.jc-topo { display: flex; align-items: center; gap: 14px; padding: 6px 44px 16px 0; }
+.jc-id { min-width: 0; }
+.jc-id h2 { font-size: 20px; line-height: 1.2; padding: 0; letter-spacing: -.2px; }
+.jc-id p { font-size: 13px; color: var(--tx-2); margin-top: 3px; }
+.jcard .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.jc-h { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--tx-3); font-weight: 600; margin: 18px 0 8px; }
+.jc-grafico { min-height: 170px; margin-top: 10px; }
+.jc-jogos { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12.5px; }
+.jc-jogos a {
+  display: grid; grid-template-columns: 30px minmax(0, 1fr) 16px auto auto; gap: 6px 8px; align-items: center;
+  padding: 9px 4px; border-top: 1px solid var(--line); color: var(--tx-2); text-decoration: none;
+}
+.jc-jogos a:hover { background: var(--hl); }
+.jc-jogos a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.jc-j { color: var(--tx-3); font-variant-numeric: tabular-nums; }
+.jc-adv { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tx); }
+.jc-res { font-weight: 700; }
+.jc-res.v { color: var(--win); }
+.jc-res.d { color: var(--loss); }
+.jc-n { font-variant-numeric: tabular-nums; text-align: right; }
+.jc-jogos a { grid-template-columns: 30px minmax(0, 1fr) 16px 52px 44px; }
+.jc-jogos a .jc-n:last-child { display: none; }
+.g-media { stroke: var(--tx-3); stroke-width: 1; stroke-dasharray: 4 3; }
+
+/* Tablet/desktop: painel lateral à direita em vez de sheet de baixo. */
+@media (min-width: 768px) {
+  .jcard-painel {
+    top: 0; left: auto; right: 0; bottom: 0; width: min(440px, 100%); max-height: none;
+    border-radius: 0; border: 0; border-left: 1px solid var(--line-2);
+    background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none;
+    padding-bottom: 0;
+  }
+  .jcard[open] .jcard-painel { animation: jc-entra .26s cubic-bezier(.2, .9, .25, 1); }
+  .jcard .sheet-grip { display: none; }
+  .jc-corpo { padding-top: 14px; }
+  .jc-jogos a { grid-template-columns: 30px minmax(0, 1fr) 16px 52px 44px 64px; }
+  .jc-jogos a .jc-n:last-child { display: block; }
+}
+@keyframes jc-entra { from { transform: translateX(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .jcard[open] .jcard-painel { animation: none; } }
