@@ -275,8 +275,8 @@ export default {
              <div class="grafico" id="grafico-evolucao" role="img"></div>
              <p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>
            </div>`)}</div>` : ''}
-         <div class="grid grid-2" style="margin-top:14px">${porPeriodo(r)}${destaques(j, r)}</div>
-         <div style="margin-top:14px">${comparador(j)}</div>
+         <div class="grid grid-2" style="margin-top:14px">${porPeriodo(r)}${comparador(j)}</div>
+         <div style="margin-top:14px">${destaques(j, r)}</div>
          </div>
          <div data-painel="boxscore" id="painel-boxscore" role="tabpanel" aria-labelledby="aba-boxscore" hidden>
          <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora, r.iniciais))}</div>
