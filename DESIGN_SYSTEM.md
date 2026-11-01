@@ -60,3 +60,14 @@ Segue o sistema; `data-theme` em `<html>` força claro/escuro e é guardado em `
 
 ## Gestos (mobile)
 Swipe-back no detalhe de jogo (arrastar ≥ 90 px desde a borda esquerda); arrastar o puxador da sheet de escalão ≥ 90 px fecha-a.
+
+## Análise de jogo
+`app/js/painel.js` desenha o painel partilhado pelo detalhe de jogo e pelo Ao vivo: três separadores (`role="tablist"`: Comparação, Fluxo do jogo, Líderes) e o filtro de período (`aria-pressed`), ambos em `.seg.seg-sm`. O estado (separador e período) vive no módulo e sobrevive aos redesenhos do Ao vivo; o foco é reposto no botão equivalente. Cálculos em `app/js/analise.js` (sem DOM); SVG em `charts.js`.
+
+Gráficos acrescentados (sempre SVG inline, só tokens):
+- **Fluxo do jogo** `linhaFluxo`: diferença de pontos em degraus (`--gold` acima de zero, `--loss` abaixo). Rachas de 6+ pontos sem resposta em faixas `.g-racha` com o resultado (`8-0`); trocas de liderança em círculos `.g-troca`; ao vivo, ponto `.g-agora` no relógio atual.
+- **Pontos por período** `barrasParciais` e **maior vantagem** `barrasLideranca`: barras `.g-bar.a` (`--ser-a`, Farense) e `.g-bar.b` (`--ser-b` com contorno `--tx-3`, para ≥ 3:1 no tema claro).
+- **Jogador** `barrasJogador`: barras jogo a jogo com linha `.g-media` tracejada; a média vai em legenda, não sobre as barras.
+
+## Cartão de jogador
+`app/js/jogador.js`. `<dialog class="sheet jcard">`: sheet de baixo com puxador em < 768 px; painel lateral de 440 px à direita a partir de 768 px. `showModal()` trata do foco preso e do `Esc`; ao fechar, o foco volta ao botão que o abriu. Abre a partir de qualquer `[data-jogador="fid"]` (`jogadorBtn()` em `ui.js`: botão com `aria-haspopup="dialog"`). Avatar `.pavatar-xl` (72 px).

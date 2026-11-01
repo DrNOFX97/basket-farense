@@ -70,7 +70,7 @@ plantel [{fid, nome, num, capitao, foto}],
 agregado {estatísticas da equipa na época, ex.: pointsAVG, pointsConcededAVG, freeThrowsPercentage},
 jogos [{fid, data, jornada, casa, fora, casaFid, foraFid, emCasa, jogado, meus, adv, resultado ("V"/"D"/null), estado, parciais [[período, casa, fora]], local, detalhe}].
 "meus" e "adv" são os pontos do Farense e do adversário, independentemente de jogar em casa ou fora. Jogos por jogar têm "jogado": false e pontos a null.
-Num jogo com "detalhe": true há ainda: lideranca {maiorCasa, maiorFora, empates, trocas}; jogadores {casa:[...], fora:[...]} com {fid, num, nome, min (segundos), pts, c2/f2 (2 pontos marcados/falhados), c3/f3 (3 pontos), cll/fll (lances livres marcados/falhados), ft (faltas cometidas), fr (faltas sofridas), val (valorização FIBA), pm (+/-)}; accoes [[período, tempo, fid do actor, tipo do actor, código, subcódigo, valor, resultado, fid da equipa]].
+Num jogo com "detalhe": true há ainda: lideranca {maiorCasa, maiorFora, empates, trocas}; jogadores {casa:[...], fora:[...]} com {fid, num, nome, min (segundos), pts, c2/f2 (2 pontos marcados/falhados), c3/f3 (3 pontos), cll/fll (lances livres marcados/falhados), ft (faltas cometidas), fr (faltas sofridas), val (valorização FIBA), pm (+/-)}; accoes [[período, tempo (ms que faltam no período), fid do actor, tipo do actor, código, subcódigo, valor, resultado, fid da equipa, createdAt, corrigida pela mesa, sequence (ordem de registo)]].
 
 ## Armadilhas
 - As datas (ex.: "2026-10-24T19:30:00.000Z") terminam em Z mas são a hora LOCAL do pavilhão. Lê o dia e a hora do texto e nunca convertas fusos horários (um parser de datas normal mostra a hora errada).

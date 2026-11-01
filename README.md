@@ -40,14 +40,19 @@ Cinco vistas por escalão, com URL própria (`#/época/escalão/vista`):
   melhores marcadores e os números da época.
 - **Jogos** — todos os jogos agrupados por mês, com filtros (casa, fora,
   realizados, por jogar).
-- **Detalhe de jogo** — marcador, parciais por período, liderança, comparação
-  entre equipas, boxscore das duas equipas e play-by-play com marcador
-  corrido.
+- **Detalhe de jogo** — marcador, parciais por período, liderança, boxscore
+  e play-by-play com marcador corrido. O painel de análise tem três
+  separadores (Comparação, Fluxo do jogo, Líderes) e um filtro de período
+  (Todos, P1 a P4, prolongamento). Por baixo: tempo em campo, quintetos,
+  faltas por período e jogadores em risco, lances livres por jogador e
+  descontos de tempo. Tudo calculado só com os cinco tipos de evento do log
+  (`POINTS`, `FOUL`, `RECEIVE`, `SWAP`, `TIMEOUT`).
 - **Classificação** — tabela do grupo, com a linha do Farense destacada.
 - **Plantel** — estatísticas agregadas por jogador, com caras da API e ordenação
-  por qualquer coluna.
-- **Ao vivo** — marcador e últimas acções do jogo a decorrer, com actualização
-  automática; fora de jogos, mostra os próximos encontros.
+  por qualquer coluna. Clicar num jogador (aqui, no boxscore ou nos líderes)
+  abre o cartão com os números da época e a evolução jogo a jogo.
+- **Ao vivo** — marcador, painel de análise, pontos por período, liderança e
+  últimas acções do jogo a decorrer, com actualização automática.
 
 Época **2026/2027**. Os escalões vão de Sub 10 a
 Séniores, masculinos e femininos, incluindo equipas A/B e competições
@@ -114,7 +119,7 @@ basquetebol costuma ter. O que existe e o que não existe:
 | Valorização (FIBA) e +/− | completos |
 | Minutos jogados | completos (em segundos) |
 | Ressaltos, assistências, roubos, desarmes, perdas | sempre a zero |
-| Posição/zona de lançamento | sempre a zero (sem mapas de tiro) |
+| Posição/zona de lançamento | sempre vazia (`position` = `[0, 0]`, `zone` = 0): sem mapas de tiro |
 | Play-by-play | só em jogos recentes com boxscore |
 
 Consequência prática: **não há percentagem de lançamento de campo possível**.
@@ -264,5 +269,11 @@ comando de build e a pasta a publicar já vêm do `netlify.toml`.
 - **Ao vivo por polling.** A API não tem subscrições, WebSockets nem SSE. O
   servidor consulta a API a cada 4 s quando há jogo a decorrer e a cada 25 s
   quando não há; o cliente lê `/api/live` a cada 5 s ou 20 s.
+- **Ordem das ações.** Ao mesmo relógio, a ordem certa é a de registo na
+  mesa (`sequence`, índice 11 de cada ação). Só com ela o +/- calculado das
+  substituições bate com o boxscore (683 de 689 jogadores; com a hora de
+  criação eram 448).
+- **Autenticação.** Continua a precisar de conta: o registo anónimo do Firebase
+  está desativado neste projeto (`ADMIN_ONLY_OPERATION`, ver `ACTION_PLAN.md`).
 - **Sem cookies nem contas.** A app é só de leitura e não guarda nada sobre
   quem a visita.
