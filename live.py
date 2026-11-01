@@ -40,7 +40,8 @@ Q_MATCH = """query L($projectKey: String!, $fid: String!) {
       awayTeam { players { player { fid name lastName number } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
         freeThrowsFailed fouls fibaRating plusMinus } } } }
-    actions { period time actor { fid type } code subCode value result teamFid }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    events { code createdAt }
   } }"""
 
 
@@ -134,7 +135,7 @@ class Estado:
                          for q in ((m.get('scores') or {}).get('partials') or [])],
             'lideranca': None,
             'jogadores': {'casa': [], 'fora': []},
-            'accoes': [],
+            'accoes': [], 'eventos': [],
             'equipa': {'id': t['id'], 'nome': t['nomeCurto'],
                        'teamFid': t['teamFid'], 'compFid': t['compFid'],
                        'competicao': t['competicao'], 'epoca': t['epoca']},
@@ -164,7 +165,10 @@ class Estado:
                 a.get('period'), a.get('time'),
                 (a.get('actor') or {}).get('fid'), (a.get('actor') or {}).get('type'),
                 a.get('code'), a.get('subCode'), a.get('value'),
-                a.get('result'), a.get('teamFid')])
+                a.get('result'), a.get('teamFid'),
+                a.get('createdAt'), bool(a.get('isEdited'))])
+        out['eventos'] = sorted(([e.get('code'), e.get('createdAt')]
+                                 for e in m.get('events') or []), key=lambda e: e[1] or '')
         return out
 
     # -- ciclo ----------------------------------------------------------

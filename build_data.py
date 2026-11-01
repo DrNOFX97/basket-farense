@@ -105,7 +105,8 @@ Q_MATCH = """query M($projectKey: String!, $fid: String!) {
     boxscore {
       homeTeam { players { player { fid name lastName number photo } stats { %s } } }
       awayTeam { players { player { fid name lastName number photo } stats { %s } } } }
-    actions { period time actor { fid type } code subCode value result teamFid }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    events { code createdAt }
   } }""" % (' '.join(BOX_M), ' '.join(BOX_M))
 Q_STAND = """query S($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
   standingsByTeam(projectKey: $projectKey, competitionFid: $competitionFid, teamFid: $teamFid) {
@@ -193,7 +194,7 @@ def pull_match(pk, fid):
         'jornada': m.get('roundName'),
         'parciais': [[q['period'], q['homeScore'], q['awayScore']]
                      for q in ((m.get('scores') or {}).get('partials') or [])],
-        'lideranca': None, 'jogadores': {'casa': [], 'fora': []}, 'accoes': [],
+        'lideranca': None, 'jogadores': {'casa': [], 'fora': []}, 'accoes': [], 'eventos': [],
     }
     st = m.get('stats') or {}
     if st.get('biggestLead'):
@@ -224,7 +225,10 @@ def pull_match(pk, fid):
             a.get('period'), a.get('time'),
             (a.get('actor') or {}).get('fid'), (a.get('actor') or {}).get('type'),
             a.get('code'), a.get('subCode'), a.get('value'),
-            a.get('result'), a.get('teamFid')])
+            a.get('result'), a.get('teamFid'),
+            a.get('createdAt'), bool(a.get('isEdited'))])
+    out['eventos'] = sorted(([e.get('code'), e.get('createdAt')] for e in m.get('events') or []),
+                            key=lambda e: e[1] or '')
     falhas = {}
     for a in acts:
         if a.get('code') == 'POINTS' and a.get('result') is False:
@@ -275,6 +279,7 @@ def pull_team(t, epoca_id):
                 j['lideranca'] = d2['lideranca']
                 j['jogadores'] = d2['jogadores']
                 j['accoes'] = d2['accoes']
+                j['eventos'] = d2['eventos']
 
     d = gql(f'stand_{tf}_{cf}', Q_STAND, {'projectKey': pk, 'competitionFid': cf, 'teamFid': tf})
     grupos = (d.get('data') or {}).get('standingsByTeam') or []

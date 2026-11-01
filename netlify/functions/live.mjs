@@ -54,7 +54,8 @@ const Q_MATCH = `query L($projectKey: String!, $fid: String!) {
       awayTeam { players { player { fid name lastName number } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
         freeThrowsFailed fouls fibaRating plusMinus } } } }
-    actions { period time actor { fid type } code subCode value result teamFid }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    events { code createdAt }
   } }`;
 
 let token = { valor: null, exp: 0 };
@@ -233,6 +234,7 @@ async function jogoDetalhado(fid) {
       : null,
     jogadores: { casa: [], fora: [] },
     accoes: [],
+    eventos: [],
     equipa: campoEquipa(t),
   };
 
@@ -265,8 +267,11 @@ async function jogoDetalhado(fid) {
       a.period, a.time,
       (a.actor || {}).fid, (a.actor || {}).type,
       a.code, a.subCode, a.value, a.result, a.teamFid,
+      a.createdAt, !!a.isEdited,
     ]);
   }
+  out.eventos = (m.events || []).map((e) => [e.code, e.createdAt])
+    .sort((a, b) => String(a[1] || '').localeCompare(String(b[1] || '')));
 
   return out;
 }
