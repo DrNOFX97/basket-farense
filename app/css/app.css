@@ -693,6 +693,8 @@ td.f5 { color: var(--loss); font-weight: 750; }
 .box-leg { margin: 0; padding: 10px 16px 14px; font-size: 11.5px; color: var(--tx-3); line-height: 1.6; }
 .box-leg b { color: var(--tx-2); font-weight: 600; }
 table.box td.name, table.box th.name { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+table.box tr.total td.name { background: var(--surface-2); }
+table.box tbody tr:hover td.name { background: var(--surface-2); }
 .qt { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
 .qt span {
   background: var(--surface-2);
@@ -1109,6 +1111,8 @@ table.box td.name, table.box th.name { position: sticky; left: 0; background: va
 .kpi b { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
 
 .kpis-sm .kpi b { font-size: 14.5px; }
+.kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpi .kpi-v { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--tx-2); font-weight: 500; }
 
 /* ---------------------------------------------------------- gráficos */
 .legenda {

@@ -112,12 +112,12 @@ function tabelaBox(lista, iniciais = new Set()) {
 
 function destaques(j, r) {
   const d = r.destaques;
-  const item = (rotulo, p, k, sinal = false) => (p ? `<div class="kpi"><span>${rotulo}</span>
-    <b>${esc(p.nome)}</b><span>${sinal && p[k] > 0 ? '+' : ''}${p[k]}</span></div>` : '');
-  return card('Destaques', `<div class="card-b kpis kpis-sm">
-    ${item('Melhor marcador', d.pts, 'pts')}
-    ${item('Melhor valorização', d.val, 'val')}
-    ${item('Melhor +/−', d.pm, 'pm', true)}
+  const item = (rotulo, p, k, unidade, sinal = false) => (p ? `<div class="kpi"><span>${rotulo}</span>
+    <b>${esc(p.nome)}</b><span class="kpi-v">${sinal && p[k] > 0 ? '+' : ''}${p[k]} ${unidade}</span></div>` : '');
+  return card('Destaques', `<div class="card-b kpis kpis-sm kpis-3">
+    ${item('Marcador', d.pts, 'pts', 'pontos')}
+    ${item('Valorização', d.val, 'val', 'de valorização')}
+    ${item('+/−', d.pm, 'pm', 'em campo', true)}
   </div>`);
 }
 
