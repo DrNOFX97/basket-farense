@@ -137,19 +137,33 @@ function pbp(j, nomes) {
     return vazio('Sem play-by-play', 'Este jogo não tem registo de acções.');
   }
 
-  let hc = 0;
-  let ac = 0;
+  // Só as acções do Farense; as do adversário contam apenas para o marcador.
+  const meu = String(j.emCasa ? j.casaFid : j.foraFid);
+  let nos = 0;
+  let eles = 0;
   const linhas = [];
 
-  for (const a of j.accoes) {
+  for (const it of D.cronologia(j)) {
+    if (it.marco) {
+      if (filtro === 'todos') {
+        linhas.push(`<tr class="marco">
+          <td class="per">${it.per ? 'P' + it.per : ''}</td>
+          <td class="t">${esc((it.em || '').slice(11, 16))}</td>
+          <td colspan="3">${esc(it.texto)}</td>
+        </tr>`);
+      }
+      continue;
+    }
+    const a = it.a;
     const [per, t, fid, tipoActor, code, sub, val, ok] = a;
     const eq = String(a[8]);
     const emCasa = eq === String(j.casaFid);
 
     if (code === 'POINTS' && ok) {
-      if (emCasa) hc += val || 0;
-      else if (eq === String(j.foraFid)) ac += val || 0;
+      if (eq === meu) nos += val || 0;
+      else eles += val || 0;
     }
+    if (eq !== meu) continue;
 
     const mostra = filtro === 'todos'
       || (filtro === 'cestos' && code === 'POINTS')
@@ -163,10 +177,10 @@ function pbp(j, nomes) {
 
     linhas.push(`<tr class="${cls}">
       <td class="per">P${per}</td>
-      <td class="t">${F.relogio(t)}</td>
-      <td><i class="dot ${emCasa ? 'a' : 'b'}"></i>${esc(nome)}</td>
-      <td>${esc(txt)}</td>
-      <td class="sc">${code === 'POINTS' && ok ? `${hc}-${ac}` : ''}</td>
+      <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogio(t)}</td>
+      <td>${esc(nome)}</td>
+      <td>${esc(txt)}${a[10] ? ' <small class="ed" title="corrigida pela mesa">✎</small>' : ''}</td>
+      <td class="sc">${code === 'POINTS' && ok ? `${nos}-${eles}` : ''}</td>
     </tr>`);
   }
 

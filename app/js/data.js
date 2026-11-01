@@ -103,6 +103,46 @@ export function proximoJogo(t) {
   return f.length ? f[0] : null;
 }
 
+// Marcos do jogo (início/fim de períodos) intercalados com as acções, por ordem.
+// Com teamFid só entram as acções dessa equipa. Cada item: {marco, texto, per} ou {a: acção}. O período de cada marco vem da
+// contagem de inícios de período (SOQ), porque o evento não o traz.
+const MARCOS = {
+  SOM: () => 'Início do jogo',
+  SOQ: (p) => `Início do período ${p}`,
+  EOQ: (p) => `Fim do período ${p}`,
+  EOM: () => 'Fim do jogo',
+  CLOSE: () => 'Ata fechada',
+  DEFER: () => 'Jogo adiado',
+};
+
+export function cronologia(j, teamFid = null) {
+  const acts = (j.accoes || []).filter((a) => !teamFid || String(a[8]) === String(teamFid));
+  const antes = new Map();
+  const depois = new Map();
+  const inicio = [];
+  const fim = [];
+  let per = 0;
+  for (const [code, em] of j.eventos || []) {
+    const f = MARCOS[code];
+    if (!f) continue;
+    if (code === 'SOQ') per += 1;
+    const m = { marco: code, texto: f(per), per, em };
+    if (code === 'SOM') inicio.push(m);
+    else if (code === 'SOQ') antes.set(per, m);
+    else if (code === 'EOQ') depois.set(per, m);
+    else fim.push(m);
+  }
+  const out = [...inicio];
+  const pers = [...new Set([...acts.map((a) => a[0]), ...antes.keys(), ...depois.keys()])]
+    .filter((p) => p != null).sort((a, b) => a - b);
+  for (const p of pers) {
+    if (antes.has(p)) out.push(antes.get(p));
+    for (const a of acts) if (a[0] === p) out.push({ a });
+    if (depois.has(p)) out.push(depois.get(p));
+  }
+  return out.concat(fim);
+}
+
 export function ultimoJogo(t) {
   const r = realizados(t);
   return r.length ? r[r.length - 1] : null;

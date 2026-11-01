@@ -60,21 +60,28 @@ function placar(j, mapaL) {
 
 function feed(j) {
   const mapa = nomes(j);
-  const acts = (j.accoes || []).slice(-15).reverse();
-  if (!acts.length) return '<div class="empty">Ainda sem acções registadas.</div>';
+  const itens = D.cronologia(j, j.equipa && j.equipa.teamFid).slice(-30).reverse();
+  if (!itens.length) return '<div class="empty">Ainda sem acções registadas.</div>';
 
   return `<div class="pbp"><table><tbody>
-    ${acts.map((a) => {
+    ${itens.map((it) => {
+      if (it.marco) {
+        return `<tr class="marco">
+          <td class="per">${it.per ? 'P' + it.per : ''}</td>
+          <td class="t">${esc((it.em || '').slice(11, 16))}</td>
+          <td colspan="2">${esc(it.texto)}</td>
+        </tr>`;
+      }
+      const a = it.a;
       const [per, tempo, fid, tipo] = a;
-      const hora = F.relogio(tempo);
       const { t: texto, c } = textoAccao(a);
       let nome = mapa[String(fid)];
-      if (!nome) nome = tipo === 'TEAM' ? '' : '—';
+      if (!nome) nome = tipo === 'TEAM' ? (String(a[8]) === String(j.casaFid) ? j.casa : j.fora) : '—';
       return `<tr class="${c}">
         <td class="per">P${per}</td>
-        <td class="t">${hora}</td>
+        <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogio(tempo)}</td>
         <td>${esc(nome)}</td>
-        <td>${esc(texto)}</td>
+        <td>${esc(texto)}${a[10] ? ' <small class="ed" title="corrigida pela mesa">✎</small>' : ''}</td>
       </tr>`;
     }).join('')}
   </tbody></table></div>`;

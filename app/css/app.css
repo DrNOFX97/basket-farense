@@ -722,6 +722,8 @@ thead th.act .arrow { opacity: 1; color: var(--tx); }
 .pbp tr.pts td { background: rgba(53, 208, 127, .055); }
 .pbp tr.miss { color: var(--tx-3); }
 .pbp .per { color: var(--tx-3); width: 30px; }
+.pbp tr.marco td { background: var(--bg-side); font-weight: 600; font-size: 12px; letter-spacing: .02em; }
+.pbp .ed { color: var(--tx-3); cursor: help; }
 
 /* ---------------------------------------------------------------- estados */
 .empty { padding: 34px 20px; text-align: center; color: var(--tx-3); font-size: 13px; }
