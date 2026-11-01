@@ -1111,6 +1111,7 @@ table.box tbody tr:hover td.name { background: var(--surface-2); }
 .kpi b { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
 
 .kpis-sm .kpi b { font-size: 14.5px; }
+[data-painel][hidden] { display: none; }
 .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .kpi .kpi-v { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--tx-2); font-weight: 500; }
 

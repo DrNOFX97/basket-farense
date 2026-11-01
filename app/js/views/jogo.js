@@ -15,6 +15,9 @@ const TIPO = {
 };
 
 let filtro = 'todos';
+let aba = 'resumo';
+
+const ABAS = [['resumo', 'Resumo'], ['boxscore', 'Boxscore'], ['pbp', 'Play-by-play']];
 
 function accaoTexto(a) {
   const [, , , , code, sub, val, ok] = a;
@@ -188,7 +191,7 @@ function pbp(j, nomes) {
         linhas.push(`<tr class="marco">
           <td class="per">${it.per ? 'P' + it.per : ''}</td>
           <td class="t">${esc((it.em || '').slice(11, 16))}</td>
-          <td colspan="3">${esc(it.texto)}</td>
+          <td colspan="3" class="name">${esc(it.texto)}</td>
         </tr>`);
       }
       continue;
@@ -217,7 +220,7 @@ function pbp(j, nomes) {
     linhas.push(`<tr class="${cls}">
       <td class="per">P${per}</td>
       <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogio(t)}</td>
-      <td>${esc(nome)}</td>
+      <td class="name">${esc(nome)}</td>
       <td>${esc(txt)}${a[10] ? ' <small class="ed" title="corrigida pela mesa">✎</small>' : ''}</td>
       <td class="sc">${code === 'POINTS' && ok ? `${nos}-${eles}` : ''}</td>
     </tr>`);
@@ -240,17 +243,27 @@ export default {
     if (!j) return vazio('Jogo não encontrado', 'Este jogo não pertence a esta equipa.');
 
     filtro = 'todos';
+    aba = 'resumo';
     const r = D.resumoFarense(j);
     const nomes = D.nomesJogo(j);
 
     const corpo = j.detalhe
-      ? `${(j.accoes || []).some((a) => a[4] === 'POINTS') ? `<div style="margin-top:14px">${card('Evolução do marcador', `<div class="card-b chart-b">
+      ? `<div class="seg abas-jogo" role="tablist" aria-label="Secções do jogo" style="margin-top:14px">
+           ${ABAS.map(([k, n]) => `<button type="button" role="tab" id="aba-${k}" data-aba="${k}" aria-controls="painel-${k}"
+             aria-selected="${aba === k}" class="${aba === k ? 'on' : ''}">${n}</button>`).join('')}
+         </div>
+         <div data-painel="resumo" id="painel-resumo" role="tabpanel" aria-labelledby="aba-resumo">
+         ${(j.accoes || []).some((a) => a[4] === 'POINTS') ? `<div style="margin-top:14px">${card('Evolução do marcador', `<div class="card-b chart-b">
              <div class="grafico" id="grafico-evolucao" role="img"></div>
              <p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>
            </div>`)}</div>` : ''}
          <div class="grid grid-2" style="margin-top:14px">${porPeriodo(r)}${destaques(j, r)}</div>
          <div style="margin-top:14px">${comparador(j)}</div>
+         </div>
+         <div data-painel="boxscore" id="painel-boxscore" role="tabpanel" aria-labelledby="aba-boxscore" hidden>
          <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora, r.iniciais))}</div>
+         </div>
+         <div data-painel="pbp" id="painel-pbp" role="tabpanel" aria-labelledby="aba-pbp" hidden>
          <div class="card" style="margin-top:14px">
            <div class="card-h">
              <h2>Play-by-play</h2>
@@ -260,6 +273,7 @@ export default {
              </div>
            </div>
            <div id="pbp-wrap">${pbp(j, nomes)}</div>
+         </div>
          </div>`
       : `<div style="margin-top:14px">${card('Detalhe indisponível',
           vazio('Sem boxscore para este jogo',
@@ -296,6 +310,29 @@ export default {
         limpar = () => window.removeEventListener('resize', desenhar);
       }
     }
+
+    const abas = [...root.querySelectorAll('[data-aba]')];
+    const mostrar = (k) => {
+      aba = k;
+      abas.forEach((b) => {
+        const on = b.dataset.aba === k;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      root.querySelectorAll('[data-painel]').forEach((p) => { p.hidden = p.dataset.painel !== k; });
+    };
+    abas.forEach((b, i) => {
+      b.addEventListener('click', () => mostrar(b.dataset.aba));
+      b.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        const prox = abas[(i + d + abas.length) % abas.length];
+        mostrar(prox.dataset.aba);
+        prox.focus();
+      });
+    });
+    mostrar(aba);
 
     root.querySelectorAll('[data-pbp]').forEach((b) => {
       b.addEventListener('click', () => {
