@@ -110,6 +110,7 @@ for (const ep of dados.epocas) {
           for (const per of ['todos', ...An.periodosDe(j)]) {
             P.definirEstado(aba, per);
             verificar(`${ep.id}/${t.id} painel ${j.status === 'LIVE' ? 'live ' : ''}${j0.fid} ${aba} ${per}`, P.painelHTML(j));
+            if (aba === 'comp') verificar(`  extras ${j0.fid} ${per}`, P.extrasHTML(j));
             if (aba === 'fluxo') verificar(`  fluxo svg ${j0.fid} ${per}`, G.linhaFluxo(j, 390, per) + G.descreverFluxo(j, per));
           }
         }
@@ -124,6 +125,27 @@ for (const ep of dados.epocas) {
           && x.pts === x.ll + 2 * x.c2 + 3 * x.c3;
         testes += 1;
         if (!ok) { falhas += 1; console.error(`  FALHA números ${j0.fid} ${lado}: ações ${JSON.stringify(x)} ≠ boxscore`); }
+      }
+      // Lances livres por jogador, faltas por período e tempo em campo contra o boxscore.
+      const ll = An.lancesLivres(jr, 'todos');
+      const fp = An.faltasPorPeriodo(jr);
+      const tc = An.tempoEmCampo(jr, 'todos');
+      for (const lado of ['casa', 'fora']) {
+        let ok = true;
+        for (const p of j0.jogadores[lado]) {
+          const x = ll[lado].find((l) => l.fid === String(p.fid)) || { ll: 0, llf: 0 };
+          if (x.ll !== (p.cll || 0) || x.llf !== (p.fll || 0)) ok = false;
+        }
+        if (fp[lado].reduce((s, n) => s + n, 0) !== j0.jogadores[lado].reduce((s, p) => s + (p.ft || 0), 0)) ok = false;
+        testes += 1;
+        if (!ok) { falhas += 1; console.error(`  FALHA LL/faltas ${j0.fid} ${lado}`); }
+        // Cinco em campo durante o jogo todo: o total de tempo ronda 5 × a duração.
+        const total = [...tc[lado].jogadores.values()].reduce((s, x) => s + x.ms, 0);
+        const esperado = 5 * An.instanteAgora(jr);
+        testes += 1;
+        if (Math.abs(total - esperado) > 0.1 * esperado) {
+          console.log(`  aviso tempo em campo ${j0.fid} ${lado}: ${Math.round(total / 1000)} s em vez de ~${Math.round(esperado / 1000)} s (log de substituições incoerente)`);
+        }
       }
       const soma = An.periodosDe(jr).reduce((s, p) => s + An.totais(jr, p).casa.pts, 0);
       testes += 1;

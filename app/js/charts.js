@@ -3,7 +3,7 @@
 
 import * as F from './format.js';
 import { esc } from './ui.js';
-import { fluxo, inicioPeriodo, duracaoPeriodo, nomePeriodo, periodosDe } from './analise.js';
+import { fluxo, inicioPeriodo, duracaoPeriodo, nomePeriodo, periodosDe, instanteAgora } from './analise.js';
 
 function rotuloJornada(j, i) {
   const m = /(\d+)/.exec(j.jornada || '');
@@ -117,17 +117,6 @@ export function linhaPontos(jogos, largura) {
 }
 
 // ------------------------------------------------------------------- fluxo ----
-// Instante (ms desde o início) até onde há jogo: ao vivo é o relógio actual.
-// O relógio do marcador vem em segundos ou em ms; abaixo de 36000 assume-se
-// segundos (um período tem 600 s ou 600000 ms).
-function instanteAgora(j, fim) {
-  if (j.status === 'LIVE' && j.periodo && j.relogio != null) {
-    const resta = j.relogio > 36000 ? j.relogio : j.relogio * 1000;
-    return Math.min(fim, inicioPeriodo(j.periodo) + duracaoPeriodo(j.periodo) - resta);
-  }
-  return fim;
-}
-
 const sinal = (d) => (d > 0 ? `+${d}` : String(d));
 
 export function descreverFluxo(j, per = 'todos') {
@@ -146,7 +135,7 @@ export function linhaFluxo(j, largura, per = 'todos') {
   const nPer = periodosDe(j).length;
   const t0 = per === 'todos' ? 0 : inicioPeriodo(per);
   const fim = per === 'todos' ? inicioPeriodo(Math.max(4, nPer) + 1) : t0 + duracaoPeriodo(per);
-  const agora = Math.max(f.pts[f.pts.length - 1].t, Math.min(fim, instanteAgora(j, fim)));
+  const agora = Math.max(f.pts[f.pts.length - 1].t, Math.min(fim, instanteAgora(j)));
   const vivo = agora < fim;
 
   const compacto = largura < 560;

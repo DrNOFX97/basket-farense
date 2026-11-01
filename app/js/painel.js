@@ -8,7 +8,7 @@
 import * as A from './analise.js';
 import * as G from './charts.js';
 import * as F from './format.js';
-import { esc, avatar, linhaCmp } from './ui.js';
+import { esc, avatar, linhaCmp, card } from './ui.js';
 
 const estado = { aba: 'comp', per: 'todos' };
 
@@ -109,7 +109,7 @@ const METRICAS = [
   ['val', 'Valorização', false, (v) => `${v}`],
   ['pm', '+/−', false, (v) => (v > 0 ? `+${v}` : `${v}`)],
   ['ft', 'Faltas', true, (v) => `${v}`],
-  ['min', 'Minutos', false, (v) => F.mmss(v)],
+  ['min', 'Minutos', true, (v) => F.mmss(v)],
 ];
 
 function celulaLider(p, fmt) {
@@ -131,7 +131,7 @@ function lideresPainel(j, per) {
       <div class="lid-t">SC Farense</div><div class="lid-t">${esc(nomeAdv(j))}</div>
       ${linhas}
     </div>
-    ${per === 'todos' ? '' : '<p class="box-leg">Pontos e faltas seguem o período escolhido. Valorização, +/− e minutos só existem para o jogo inteiro.</p>'}
+    ${per === 'todos' ? '' : '<p class="box-leg">Pontos e faltas seguem o período escolhido. Os minutos vêm das substituições. Valorização e +/− só existem para o jogo inteiro.</p>'}
   </div>`;
 }
 
@@ -157,6 +157,122 @@ export function painelHTML(j) {
     </div>
     <div role="tabpanel" id="${id}-p" aria-labelledby="${id}-${estado.aba}">${corpo}</div>
   </section>`;
+}
+
+// ------------------------------------------------------------ mais estatísticas
+const apelido = (nome) => String(nome || '').trim().split(/\s+/).pop() || '—';
+const rotuloPer = (per) => (per === 'todos' ? 'Jogo inteiro' : A.nomePeriodo(per));
+const sinalPts = (v) => (v > 0 ? `+${v}` : String(v));
+const ladoRot = (per) => `<span class="side">${rotuloPer(per)}</span>`;
+
+function cartaoTempo(j, per) {
+  const lado = j.emCasa ? 'casa' : 'fora';
+  const mins = A.minutos(j, per)[lado];
+  const jog = (j.jogadores[lado] || []).map((p) => ({ ...p, seg: mins.get(String(p.fid)) || 0 }))
+    .filter((p) => p.seg > 0).sort((a, b) => b.seg - a.seg);
+  if (!jog.length) return card('Tempo em campo', '<div class="empty">Sem tempo de jogo neste período.</div>', ladoRot(per));
+  const dur = per === 'todos' ? null : A.duracaoPeriodo(per) / 1000;
+  const linhas = jog.map((p) => `<tr>
+    <td class="pos">${esc(p.num || '-')}</td>
+    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
+    <td>${F.mmss(p.seg)}</td>
+    ${dur ? `<td>${Math.round((p.seg / dur) * 100)}%</td>` : ''}
+  </tr>`).join('');
+  return card('Tempo em campo', `<div class="tw"><table>
+    <thead><tr><th scope="col">#</th><th scope="col" class="name">Jogador</th>
+    <th scope="col">Tempo</th>${dur ? '<th scope="col" title="Percentagem do período">%</th>' : ''}</tr></thead>
+    <tbody>${linhas}</tbody></table></div>`, ladoRot(per));
+}
+
+function cartaoQuintetos(j, per) {
+  const lado = j.emCasa ? 'casa' : 'fora';
+  const tc = A.tempoEmCampo(j, per)[lado];
+  const nomes = new Map((j.jogadores[lado] || []).map((p) => [String(p.fid), p.nome]));
+  const lista = tc.quintetos.filter((q) => q.fids.length === 5).slice(0, 6);
+  if (!lista.length) return card('Quintetos', '<div class="empty">Sem quintetos completos neste período.</div>', ladoRot(per));
+  const linhas = lista.map((q) => `<tr>
+      <td class="name quint">${q.fids.map((f) => esc(apelido(nomes.get(f)))).join(' · ')}</td>
+      <td>${F.mmss(Math.round(q.ms / 1000))}</td>
+      <td title="Pontos marcados – sofridos com este cinco em campo">${q.pro}–${q.contra} <small>(${sinalPts(q.pro - q.contra)})</small></td>
+    </tr>`).join('');
+  return card('Quintetos', `<div class="tw"><table>
+    <thead><tr><th scope="col" class="name">Cinco em campo</th><th scope="col">Tempo</th><th scope="col" title="Pontos marcados – sofridos">Pts</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>`, ladoRot(per));
+}
+
+const textoMomento = (m) => (m ? `${A.nomePeriodo(m.per)} ${F.relogioMs(m.tempo)}` : '');
+
+function cartaoFaltas(j) {
+  const f = A.faltasPorPeriodo(j);
+  const nome = (lado) => (lado === 'casa' ? j.casa : j.fora);
+  const titulo = 'A partir da 5.ª falta de equipa no período há lances livres';
+  const linha = (lado) => {
+    const v = f[lado];
+    return `<tr><td class="name">${esc(nome(lado))}</td>
+      ${v.map((n) => `<td class="${n >= A.FALTAS_BONUS ? 'bonus' : ''}"${n >= A.FALTAS_BONUS ? ` title="${titulo}"` : ''}>${n}</td>`).join('')}
+      <td><b>${v.reduce((s, n) => s + n, 0)}</b></td></tr>`;
+  };
+  const ordem = j.emCasa ? ['casa', 'fora'] : ['fora', 'casa'];
+  const nosLado = j.emCasa ? 'casa' : 'fora';
+  const itens = A.emRisco(j).map((p) => {
+    const eq = p.lado === nosLado ? 'Farense' : nome(p.lado);
+    const estado = p.quinta
+      ? `<em class="elim">excluído com 5 faltas</em> <span>(5.ª em ${textoMomento(p.quinta)})</span>`
+      : `<em class="risco-t">4 faltas</em> <span>(4.ª em ${textoMomento(p.quarta)})</span>`;
+    return `<li><b>${esc(p.nome)}</b> <span>${esc(eq)}</span> ${estado}</li>`;
+  }).join('');
+  return card('Faltas', `<div class="tw"><table>
+    <thead><tr><th scope="col" class="name">Faltas de jogadores</th>
+      ${f.pers.map((p) => `<th scope="col">${A.nomePeriodo(p)}</th>`).join('')}<th scope="col">Tot.</th></tr></thead>
+    <tbody>${ordem.map(linha).join('')}</tbody></table></div>
+    <div class="card-b" style="padding-top:12px">
+      <p class="box-leg" style="padding:0 0 8px">A vermelho: 5 ou mais faltas de equipa no período. Jogadores com 4 ou 5 faltas, no jogo inteiro:</p>
+      ${itens ? `<ul class="rachas">${itens}</ul>` : '<p class="box-leg" style="padding:0">Ninguém chegou às 4 faltas.</p>'}
+    </div>`);
+}
+
+function cartaoLL(j, per) {
+  const lado = j.emCasa ? 'casa' : 'fora';
+  const lista = A.lancesLivres(j, per)[lado];
+  if (!lista.length) return card('Lances livres', '<div class="empty">Sem lances livres neste período.</div>', ladoRot(per));
+  const t = lista.reduce((s, x) => ({ ll: s.ll + x.ll, llf: s.llf + x.llf }), { ll: 0, llf: 0 });
+  const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : '—');
+  const linhas = lista.map((p) => `<tr>
+    <td class="name"><span class="pname">${avatar(p.foto, p.nome, 'pavatar-sm')}<span>${esc(p.nome)}</span></span></td>
+    <td><b>${p.ll}</b></td><td>${p.llf}</td><td>${pct(p.ll, p.tentados)}</td>
+  </tr>`).join('');
+  return card('Lances livres', `<div class="tw"><table>
+    <thead><tr><th scope="col" class="name">Jogador</th><th scope="col" title="Convertidos">Conv.</th>
+      <th scope="col" title="Falhados">Falh.</th><th scope="col" title="Convertidos / tentados">%</th></tr></thead>
+    <tbody>${linhas}
+    <tr class="total"><td class="name">Total</td><td><b>${t.ll}</b></td><td>${t.llf}</td><td>${pct(t.ll, t.ll + t.llf)}</td></tr>
+    </tbody></table></div>`, ladoRot(per));
+}
+
+function cartaoTimeouts(j, per) {
+  const lista = A.timeouts(j, per);
+  if (!lista.length) return card('Descontos de tempo', '<div class="empty">Sem descontos de tempo neste período.</div>', ladoRot(per));
+  const linhas = lista.map((m, i) => {
+    const nos = (m.lado === 'casa') === !!j.emCasa;
+    const eq = nos ? 'Farense' : (m.lado === 'casa' ? j.casa : j.fora);
+    return `<tr class="${nos ? '' : 'mut'}">
+      <td>${A.nomePeriodo(m.per)}</td><td title="Tempo que faltava no período">${F.relogioMs(m.tempo)}</td>
+      <td class="name nome-curto">${esc(eq)}</td><td>${m.casa}–${m.fora}</td></tr>`;
+  }).join('');
+  return card('Descontos de tempo', `<div class="tw"><table>
+    <thead><tr><th scope="col">Per.</th><th scope="col" title="Tempo que faltava no período">Resta</th>
+      <th scope="col" class="name">Pediu</th><th scope="col" title="Marcador (casa–fora) no momento">Marcador</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>`, ladoRot(per));
+}
+
+// Cartões que dependem do filtro de período do painel.
+export function extrasHTML(j) {
+  const per = perAtual(j);
+  return `<div data-extras="${esc(j.fid)}">
+    <div class="grid grid-2" style="margin-top:14px">${cartaoTempo(j, per)}${cartaoQuintetos(j, per)}</div>
+    <div class="grid grid-2" style="margin-top:14px">${cartaoFaltas(j)}${cartaoLL(j, per)}</div>
+    <div style="margin-top:14px">${cartaoTimeouts(j, per)}</div>
+  </div>`;
 }
 
 // ------------------------------------------------------------------- desenho
@@ -188,6 +304,10 @@ function refrescar(raiz, obterJogos) {
   raiz.querySelectorAll('[data-analise]').forEach((sec) => {
     const j = jogos.find((x) => String(x.fid) === sec.dataset.analise);
     if (j) sec.outerHTML = painelHTML(j);
+  });
+  raiz.querySelectorAll('[data-extras]').forEach((sec) => {
+    const j = jogos.find((x) => String(x.fid) === sec.dataset.extras);
+    if (j) sec.outerHTML = extrasHTML(j);
   });
   pintar(raiz, jogos);
   repor();

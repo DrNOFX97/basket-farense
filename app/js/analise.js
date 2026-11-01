@@ -153,10 +153,11 @@ export function lideres(j, per = 'todos') {
     else if (code === 'FOUL') ref(String(fid)).ft += 1;
   }
 
+  const mins = minutos(j, per);
   const lista = (lado) => ((j.jogadores && j.jogadores[lado]) || []).map((p) => {
     const a = acc.get(String(p.fid)) || { pts: 0, ft: 0 };
     return { fid: p.fid, nome: p.nome, num: p.num, foto: p.foto || null,
-      pts: a.pts, ft: a.ft, val: p.val || 0, pm: p.pm || 0, min: p.min || 0 };
+      pts: a.pts, ft: a.ft, val: p.val || 0, pm: p.pm || 0, min: mins[lado].get(String(p.fid)) || 0 };
   });
 
   const melhor = (jog, k) => {
@@ -174,4 +175,192 @@ export function lideres(j, per = 'todos') {
   const casa = lista('casa');
   const fora = lista('fora');
   return { casa: por(casa), fora: por(fora) };
+}
+
+// ------------------------------------------------------------ tempo em campo
+// Instante actual do jogo ao vivo (ms desde o início). O relógio do marcador
+// vem em segundos ou em ms; abaixo de 36000 assume-se segundos (um período
+// tem 600 s ou 600000 ms).
+export function instanteAgora(j) {
+  const n = periodosDe(j).length;
+  const fimRegulamentar = inicioPeriodo(Math.max(4, n) + 1);
+  if (j.status === 'LIVE' && j.periodo && j.relogio != null) {
+    const resta = j.relogio > 36000 ? j.relogio : j.relogio * 1000;
+    return Math.min(fimRegulamentar, inicioPeriodo(j.periodo) + duracaoPeriodo(j.periodo) - resta);
+  }
+  // Jogo terminado: fim do último período jogado.
+  const ultimo = Math.max(...periodosDe(j));
+  return inicioPeriodo(ultimo) + duracaoPeriodo(ultimo);
+}
+
+// Janela [de, ate] em ms de um período, ou do jogo todo.
+function janela(j, per) {
+  const fim = instanteAgora(j);
+  if (per === 'todos' || per == null) return [0, fim];
+  return [inicioPeriodo(per), Math.min(fim, inicioPeriodo(per) + duracaoPeriodo(per))];
+}
+
+// Tempo em campo de cada jogador, +/- e quintetos, a partir das substituições.
+// As entradas e saídas descrevem o que muda em relação ao que já está em campo
+// (incluindo no início de cada período), por isso mantém-se o conjunto em campo
+// ao longo de todo o jogo e acumula-se o tempo entre ações.
+// Devolve { casa, fora } com { jogadores: Map fid → {ms, pm}, quintetos: [...] }.
+export function tempoEmCampo(j, per = 'todos') {
+  const [w0, w1] = janela(j, per);
+  const eq = { casa: String(j.casaFid), fora: String(j.foraFid) };
+  const campo = { casa: new Set(), fora: new Set() };
+  const res = { casa: { jogadores: new Map(), quintetos: new Map() }, fora: { jogadores: new Map(), quintetos: new Map() } };
+  const ref = (lado, fid) => {
+    const m = res[lado].jogadores;
+    if (!m.has(fid)) m.set(fid, { fid, ms: 0, pm: 0 });
+    return m.get(fid);
+  };
+  const quinteto = (lado) => {
+    const chave = [...campo[lado]].sort().join('|');
+    const q = res[lado].quintetos;
+    if (!q.has(chave)) q.set(chave, { fids: [...campo[lado]].sort(), ms: 0, pro: 0, contra: 0 });
+    return q.get(chave);
+  };
+
+  let cursor = 0;
+  const acumula = (ate) => {
+    const de = Math.max(cursor, w0);
+    const a = Math.min(ate, w1);
+    if (a > de) {
+      for (const lado of ['casa', 'fora']) {
+        if (!campo[lado].size) continue;
+        for (const fid of campo[lado]) ref(lado, fid).ms += a - de;
+        quinteto(lado).ms += a - de;
+      }
+    }
+    cursor = Math.max(cursor, ate);
+  };
+
+  for (const a of accoesOrdenadas(j)) {
+    const t = instante(a);
+    const [, , fid, , code, sub, val, ok, equipa] = a;
+    const lado = String(equipa) === eq.casa ? 'casa' : String(equipa) === eq.fora ? 'fora' : null;
+    if (!lado) continue;
+    acumula(t);
+    if (code === 'SWAP' && fid) {
+      if (sub === 'SWAP_IN') campo[lado].add(String(fid));
+      else if (sub === 'SWAP_OUT') campo[lado].delete(String(fid));
+    } else if (code === 'POINTS' && ok && t >= w0 && t <= w1) {
+      // Pontos contam para o +/- de quem está em campo no momento.
+      const outro = lado === 'casa' ? 'fora' : 'casa';
+      for (const f of campo[lado]) ref(lado, f).pm += val || 0;
+      for (const f of campo[outro]) ref(outro, f).pm -= val || 0;
+      if (campo[lado].size) quinteto(lado).pro += val || 0;
+      if (campo[outro].size) quinteto(outro).contra += val || 0;
+    }
+  }
+  acumula(w1);
+
+  const fim = (lado) => ({
+    jogadores: res[lado].jogadores,
+    quintetos: [...res[lado].quintetos.values()].filter((q) => q.ms > 0).sort((x, y) => y.ms - x.ms),
+  });
+  return { casa: fim('casa'), fora: fim('fora') };
+}
+
+// -------------------------------------------------------------------- faltas
+export const FALTAS_BONUS = 5; // 5.ª falta de equipa no período: lances livres
+export const FALTAS_ELIMINACAO = 5;
+
+const ladoDe = (j, a) => (String(a[8]) === String(j.casaFid) ? 'casa'
+  : String(a[8]) === String(j.foraFid) ? 'fora' : null);
+
+// Faltas de jogadores por equipa e período (as técnicas do banco não contam).
+export function faltasPorPeriodo(j) {
+  const pers = periodosDe(j);
+  const out = { casa: pers.map(() => 0), fora: pers.map(() => 0) };
+  for (const a of j.accoes || []) {
+    const lado = ladoDe(j, a);
+    if (lado && a[4] === 'FOUL' && a[3] === 'PLAYER' && out[lado][a[0] - 1] !== undefined) out[lado][a[0] - 1] += 1;
+  }
+  return { pers, ...out };
+}
+
+// Jogadores com 4 ou mais faltas, e o momento em que chegaram a 4 e a 5.
+export function emRisco(j) {
+  const por = new Map();
+  for (const a of accoesOrdenadas(j)) {
+    if (a[4] !== 'FOUL' || a[3] !== 'PLAYER' || !a[2]) continue;
+    const lado = ladoDe(j, a);
+    if (!lado) continue;
+    const k = String(a[2]);
+    if (!por.has(k)) por.set(k, { fid: k, lado, faltas: [] });
+    por.get(k).faltas.push({ per: a[0], tempo: a[1] });
+  }
+  const nomes = new Map();
+  for (const lado of ['casa', 'fora']) {
+    for (const p of (j.jogadores && j.jogadores[lado]) || []) nomes.set(String(p.fid), p);
+  }
+  return [...por.values()].filter((p) => p.faltas.length >= FALTAS_ELIMINACAO - 1)
+    .map((p) => ({
+      ...p,
+      nome: (nomes.get(p.fid) || {}).nome || '—',
+      ft: p.faltas.length,
+      quarta: p.faltas[FALTAS_ELIMINACAO - 2],
+      quinta: p.faltas[FALTAS_ELIMINACAO - 1] || null,
+    }))
+    .sort((x, y) => y.ft - x.ft || x.nome.localeCompare(y.nome));
+}
+
+// ------------------------------------------------------------- lances livres
+// Convertidos e falhados por jogador. Os lances livres são o único lançamento
+// que a fonte regista por inteiro (convertidos e falhados).
+export function lancesLivres(j, per = 'todos') {
+  const acc = new Map();
+  for (const a of filtrar(j, per)) {
+    if (a[4] !== 'POINTS' || a[5] !== 'FREE_THROW') continue;
+    const lado = ladoDe(j, a);
+    if (!lado) continue;
+    const k = `${lado}:${a[2] || 'equipa'}`;
+    if (!acc.has(k)) acc.set(k, { lado, fid: a[2] ? String(a[2]) : null, ll: 0, llf: 0 });
+    acc.get(k)[a[7] ? 'll' : 'llf'] += 1;
+  }
+  const nomes = new Map();
+  for (const lado of ['casa', 'fora']) {
+    for (const p of (j.jogadores && j.jogadores[lado]) || []) nomes.set(String(p.fid), p);
+  }
+  const lista = (lado) => [...acc.values()].filter((x) => x.lado === lado).map((x) => ({
+    ...x, nome: x.fid ? (nomes.get(x.fid) || {}).nome || '—' : 'Equipa',
+    foto: x.fid ? (nomes.get(x.fid) || {}).foto || null : null,
+    tentados: x.ll + x.llf,
+  })).sort((a, b) => b.tentados - a.tentados || b.ll - a.ll || a.nome.localeCompare(b.nome));
+  return { casa: lista('casa'), fora: lista('fora') };
+}
+
+// ------------------------------------------------------------------ timeouts
+// Descontos de tempo por ordem, com o marcador no momento do pedido.
+export function timeouts(j, per = 'todos') {
+  const out = [];
+  let casa = 0;
+  let fora = 0;
+  for (const a of accoesOrdenadas(j)) {
+    const lado = ladoDe(j, a);
+    if (!lado) continue;
+    if (a[4] === 'POINTS' && a[7]) {
+      if (lado === 'casa') casa += a[6] || 0; else fora += a[6] || 0;
+    } else if (a[4] === 'TIMEOUT' && (per === 'todos' || a[0] === per)) {
+      out.push({ per: a[0], tempo: a[1], lado, casa, fora });
+    }
+  }
+  return out;
+}
+
+// Segundos em campo de cada jogador. Jogo inteiro: minutos do boxscore (fonte
+// oficial). Por período: calculados das substituições.
+export function minutos(j, per = 'todos') {
+  const out = { casa: new Map(), fora: new Map() };
+  const tc = per === 'todos' ? null : tempoEmCampo(j, per);
+  for (const lado of ['casa', 'fora']) {
+    for (const p of (j.jogadores && j.jogadores[lado]) || []) {
+      out[lado].set(String(p.fid), tc
+        ? Math.round(((tc[lado].jogadores.get(String(p.fid)) || {}).ms || 0) / 1000)
+        : (p.min || 0));
+    }
+  }
+  return out;
 }

@@ -238,6 +238,7 @@ export default {
          </div>
          <div data-painel="resumo" id="painel-resumo" role="tabpanel" aria-labelledby="aba-resumo">
          ${(j.accoes || []).length ? `<div style="margin-top:14px">${P.painelHTML(j)}</div>` : ''}
+         ${(j.accoes || []).length ? P.extrasHTML(j) : ''}
          <div style="margin-top:14px">${porPeriodo(r)}</div>
          </div>
          <div data-painel="boxscore" id="painel-boxscore" role="tabpanel" aria-labelledby="aba-boxscore" hidden>
