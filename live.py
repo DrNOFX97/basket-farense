@@ -15,6 +15,12 @@ import time
 
 from swish_client import Swish
 
+# Mesmas janelas e TTL que netlify/functions/live.mjs.
+TTL_AGENDA = 300
+TTL_AGENDA_JOGO = 30
+JANELA_ANTES = datetime.timedelta(minutes=30)
+JANELA_DEPOIS = datetime.timedelta(hours=4)
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(BASE, 'data', 'farense.json')
 
@@ -69,7 +75,23 @@ class Estado:
         self.ultimo_erro = None
 
     # -- agenda ---------------------------------------------------------
-    def agenda(self, max_idade=300):
+    @staticmethod
+    def em_janela(m, agora):
+        # As horas da API sao locais mas terminam em Z: compara-se sem fusos.
+        try:
+            dt = datetime.datetime.strptime((m.get('date') or '')[:19], '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            return False
+        ts = m.get('timeStatus') or {}
+        return (ts.get('status') != 'FINISHED'
+                and dt - agora < JANELA_ANTES and agora - dt < JANELA_DEPOIS)
+
+    def ha_jogo_na_janela(self):
+        agora = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+        return any(self.em_janela(e['m'], agora) for e in self.schedules.values())
+
+    def agenda(self):
+        max_idade = TTL_AGENDA_JOGO if self.ha_jogo_na_janela() else TTL_AGENDA
         if self.schedules and time.time() - self.tsched < max_idade:
             return self.schedules
         sched = {}
@@ -89,8 +111,12 @@ class Estado:
 
     def candidatos(self):
         sched = self.agenda()
+        # LIVE na agenda, ou dentro da janela horaria: a agenda pode estar
+        # atrasada e o detalhe do jogo diz a verdade.
+        agora = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         return [fid for fid, e in sched.items()
-                if (e['m'].get('timeStatus') or {}).get('status') == 'LIVE']
+                if (e['m'].get('timeStatus') or {}).get('status') == 'LIVE'
+                or self.em_janela(e['m'], agora)]
 
     # -- jogo -----------------------------------------------------------
     def jogo(self, fid):
@@ -158,7 +184,8 @@ class Estado:
     # -- ciclo ----------------------------------------------------------
     def atualizar(self):
         try:
-            jogos = [j for j in (self.jogo(f) for f in self.candidatos()) if j]
+            jogos = [j for j in (self.jogo(f) for f in self.candidatos())
+                     if j and j['status'] == 'LIVE']
             self.ultimo_erro = None
         except Exception as e:
             jogos = []
