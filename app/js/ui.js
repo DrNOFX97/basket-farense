@@ -60,11 +60,13 @@ export function barra(a, b) {
   </div>`;
 }
 
-export function linhaCmp(rotulo, a, b, fmt = (x) => x) {
+// opc.menosMelhor: ganha quem tem menos (faltas); opc.semBarra: só os números.
+export function linhaCmp(rotulo, a, b, fmt = (x) => x, opc = {}) {
+  const melhor = a === b ? '' : ((a < b) === !!opc.menosMelhor ? 'l' : 'r');
   return `<div class="cmp-row">
-    <div class="l">${fmt(a)}</div>
-    ${barra(a, b)}
-    <div class="r">${fmt(b)}</div>
+    <div class="l${melhor === 'l' ? ' bom' : ''}">${fmt(a)}</div>
+    ${opc.semBarra ? '<div class="cmp-track"></div>' : barra(a, b)}
+    <div class="r${melhor === 'r' ? ' bom' : ''}">${fmt(b)}</div>
     <div class="k" style="grid-column:1/-1;margin-top:-6px">${esc(rotulo)}</div>
   </div>`;
 }

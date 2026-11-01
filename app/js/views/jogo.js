@@ -49,10 +49,12 @@ function placar(t, j) {
       <div class="sb-team f">${logo(mapaL.get(String(j.foraFid)), 'tlogo-lg')}${esc(j.fora)}<small>fora</small></div>
     </div>
     <div class="sb-meta">
+      ${j.jogado ? `<span class="res res-${j.resultado === 'V' ? 'v' : 'd'}">${j.resultado === 'V' ? 'Vitória' : 'Derrota'}</span>` : ''}
       ${esc(F.dataLonga(j.data))}${j.local ? ' · ' + esc(j.local) : ''}
       ${j.jornada ? ' · ' + esc(j.jornada) : ''} · ${estado}
     </div>
     ${parciais}
+    ${lideranca(j)}
   </div>`;
 }
 
@@ -91,45 +93,57 @@ function tabelaBox(lista) {
 
   return `<div class="tw"><table class="box">
     <thead><tr>
-      <th scope="col">#</th><th scope="col" class="name">Jogador</th><th scope="col">MIN</th>
-      <th scope="col">PTS</th><th scope="col">2P</th><th scope="col">3P</th>
-      <th scope="col">LL</th><th scope="col">FT</th><th scope="col">FR</th>
-      <th scope="col">VAL</th><th scope="col">+/−</th>
+      <th scope="col">#</th><th scope="col" class="name">Jogador</th>
+      <th scope="col" title="Minutos jogados">MIN</th>
+      <th scope="col" title="Pontos">PTS</th>
+      <th scope="col" title="Cestos de 2 pontos convertidos">2P</th>
+      <th scope="col" title="Cestos de 3 pontos convertidos">3P</th>
+      <th scope="col" title="Lances livres convertidos / tentados">LL</th>
+      <th scope="col" title="Faltas cometidas">FT</th>
+      <th scope="col" title="Faltas sofridas">FR</th>
+      <th scope="col" title="Valorização (índice FIBA)">VAL</th>
+      <th scope="col" title="Diferença de pontos com o jogador em campo">+/−</th>
     </tr></thead>
     <tbody>${linhas}${total}</tbody>
-  </table></div>`;
+  </table></div>
+  <p class="box-leg"><b>MIN</b> minutos · <b>PTS</b> pontos · <b>2P / 3P</b> cestos convertidos · <b>LL</b> lances livres convertidos/tentados · <b>FT</b> faltas cometidas · <b>FR</b> faltas sofridas · <b>VAL</b> valorização · <b>+/−</b> diferença de pontos com o jogador em campo</p>`;
 }
 
 function comparador(j) {
-  const a = D.totaisJogo(j.jogadores.casa);
-  const b = D.totaisJogo(j.jogadores.fora);
+  const eu = j.emCasa ? j.jogadores.casa : j.jogadores.fora;
+  const ad = j.emCasa ? j.jogadores.fora : j.jogadores.casa;
+  const a = D.totaisJogo(eu);
+  const b = D.totaisJogo(ad);
   if (!a.pts && !b.pts) return '';
+  const nomeAdv = j.emCasa ? j.fora : j.casa;
+  const pctLL = (t) => (t.cll + t.fll ? Math.round((t.cll / (t.cll + t.fll)) * 100) : 0);
+  const pc = (x) => `${x}%`;
   return card('Comparação', `<div class="card-b"><div class="cmp">
       ${linhaCmp('Pontos', a.pts, b.pts)}
       ${linhaCmp('2 pontos conv.', a.c2, b.c2)}
       ${linhaCmp('3 pontos conv.', a.c3, b.c3)}
-      ${linhaCmp('Lances livres', a.cll, b.cll)}
-      ${linhaCmp('Faltas', a.ft, b.ft)}
+      ${linhaCmp('Lances livres (% conv.)', pctLL(a), pctLL(b), pc)}
+      ${linhaCmp('Faltas (menos é melhor)', a.ft, b.ft, (x) => x, { menosMelhor: true, semBarra: true })}
       ${linhaCmp('Valorização', a.val, b.val)}
     </div>
     <div class="cmp-legenda">
-      <span><i class="sw a"></i>${esc(j.casa)}</span>
-      <span><i class="sw b"></i>${esc(j.fora)}</span>
+      <span><i class="sw a"></i>SC Farense</span>
+      <span><i class="sw b"></i>${esc(nomeAdv)}</span>
     </div></div>`);
 }
 
+// Linha única no placar, da perspectiva do Farense.
 function lideranca(j) {
   const l = j.lideranca;
   if (!l) return '';
-  const itens = [
-    ['Maior vantagem (casa)', l.maiorCasa],
-    ['Maior vantagem (fora)', l.maiorFora],
-    ['Empates', l.empates],
-    ['Trocas de liderança', l.trocas],
-  ];
-  return card('Liderança', `<div class="card-b kpis kpis-sm">
-    ${itens.map(([k, v]) => `<div class="kpi"><span>${esc(k)}</span><b>${v ?? '—'}</b></div>`).join('')}
-  </div>`);
+  const nomeAdv = j.emCasa ? j.fora : j.casa;
+  const nos = j.emCasa ? l.maiorCasa : l.maiorFora;
+  const eles = j.emCasa ? l.maiorFora : l.maiorCasa;
+  const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+  const fim = l.empates || l.trocas
+    ? `${plural(l.empates || 0, 'empate', 'empates')} · ${plural(l.trocas || 0, 'troca de liderança', 'trocas de liderança')}`
+    : 'sem empates nem trocas de liderança';
+  return `<div class="sb-lid">Maior vantagem: Farense ${nos ?? 0} · ${esc(nomeAdv)} ${eles ?? 0} · ${fim}</div>`;
 }
 
 function pbp(j, nomes) {
@@ -204,17 +218,8 @@ export default {
     const nomes = D.nomesJogo(j);
 
     const corpo = j.detalhe
-      ? `<div class="grid grid-2" style="margin-top:14px">
-           ${card('Parciais', `<div class="tw"><table>
-             <thead><tr><th scope="col">Período</th><th scope="col">${esc(j.casa)}</th><th scope="col">${esc(j.fora)}</th></tr></thead>
-             <tbody>${(j.parciais || []).map(([p, a, b]) => `<tr><td>P${p}</td><td>${a}</td><td>${b}</td></tr>`).join('')}
-             <tr class="total"><td>Total</td><td><b>${j.emCasa ? j.meus : j.adv}</b></td><td><b>${j.emCasa ? j.adv : j.meus}</b></td></tr>
-             </tbody></table></div>`)}
-           ${lideranca(j)}
-         </div>
-         <div style="margin-top:14px">${comparador(j)}</div>
-         <div style="margin-top:14px">${card(null, cabecalhoBox(j.casa, 'casa') + tabelaBox(j.jogadores.casa))}</div>
-         <div style="margin-top:14px">${card(null, cabecalhoBox(j.fora, 'fora') + tabelaBox(j.jogadores.fora))}</div>
+      ? `<div style="margin-top:14px">${comparador(j)}</div>
+         <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora))}</div>
          <div class="card" style="margin-top:14px">
            <div class="card-h">
              <h2>Play-by-play</h2>
@@ -247,5 +252,6 @@ export default {
         if (wrap) wrap.innerHTML = pbp(j, nomes);
       });
     });
+
   },
 };
