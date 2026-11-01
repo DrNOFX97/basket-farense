@@ -1146,6 +1146,16 @@ table.box tbody tr:hover td.name { background: var(--surface-2); }
 .g-ponto { fill: var(--tx-3); stroke: var(--surface); stroke-width: 2; }
 .g-ponto.m { fill: var(--gold); }
 .g-ponto.s { fill: var(--loss); }
+.g-valor.forte { fill: var(--tx); font-weight: 700; }
+.g-rotulo { fill: var(--tx-2); font-size: 12px; font-family: var(--font); }
+/* Barras: a série B leva contorno para ter ≥ 3:1 sobre o cartão no tema claro. */
+.g-bar.a { fill: var(--ser-a); }
+.g-bar.b { fill: var(--ser-b); stroke: var(--tx-3); stroke-width: 1; }
+.g-hit { fill: transparent; }
+.grafico[data-grafico="lideranca"] { min-height: 0; }
+.g-agora { fill: var(--win); stroke: var(--surface); stroke-width: 2; }
+.legenda-graf { display: flex; gap: 14px; flex-wrap: wrap; padding: 6px 0 0; font-size: 12px; color: var(--tx-2); }
+.legenda-graf span { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ---------------------------------------------------------- filtros */
 .barra-filtros {

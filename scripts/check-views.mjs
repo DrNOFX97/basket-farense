@@ -63,6 +63,43 @@ for (const ep of dados.epocas) {
   }
 }
 
+// Ao vivo: não há jogo a decorrer em teste, por isso simula-se um a partir de
+// cada jogo real, cortado a meio do 3.º período.
+const { desenhar: desenharLive } = await view('aovivo.js');
+const G = await import(pathToFileURL(path.join(RAIZ, 'app/js/charts.js')).href);
+
+function simularLive(t, j) {
+  const corte = (a) => a[0] < 3 || (a[0] === 3 && a[1] >= 300000);
+  const accoes = (j.accoes || []).filter(corte);
+  const soma = (lado) => accoes.filter((a) => a[4] === 'POINTS' && a[7]
+    && String(a[8]) === String(lado)).reduce((s, a) => s + (a[6] || 0), 0);
+  return {
+    ...j,
+    status: 'LIVE', periodo: 3, relogio: 300000,
+    accoes,
+    parciais: (j.parciais || []).filter(([p]) => p <= 3),
+    pontos: [soma(j.casaFid), soma(j.foraFid)],
+    equipa: { teamFid: t.teamFid, nome: t.nomeCurto },
+    emCasa: String(j.casaFid) === String(t.teamFid),
+  };
+}
+
+for (const ep of dados.epocas) {
+  for (const t of ep.equipas) {
+    for (const j of t.jogos.filter((x) => x.detalhe && (x.accoes || []).length)) {
+      const sim = simularLive(t, j);
+      const marca = `${ep.id}/${t.id} ao-vivo simulado ${j.fid}`;
+      verificar(marca, desenharLive(t, { atualizado: '2026-01-01 20:00:00', erro: null }, [sim]));
+      for (const largura of [390, 820, 1440]) {
+        verificar(`${marca} evolução ${largura}`, G.linhaEvolucao(sim, largura) + G.descreverEvolucao(sim));
+        verificar(`${marca} parciais ${largura}`, G.barrasParciais(sim, largura) + G.descreverParciais(sim));
+        if (sim.lideranca) verificar(`${marca} liderança ${largura}`, G.barrasLideranca(sim, largura) + G.descreverLideranca(sim));
+      }
+    }
+  }
+}
+verificar('ao-vivo sem jogos', desenharLive(dados.epocas[0].equipas[0], { atualizado: null, erro: null }, []));
+
 // A vista da API lê localStorage, que fora do browser não existe: tem de aguentar.
 globalThis.location = { origin: 'https://exemplo.test' };
 verificar('api', api.render());

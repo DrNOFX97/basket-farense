@@ -1,6 +1,7 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import { esc, vazio, card, logo } from '../ui.js';
+import * as G from '../charts.js';
+import { esc, card, logo } from '../ui.js';
 
 let timer = null;
 let vivo = false;
@@ -79,7 +80,7 @@ function feed(j) {
       if (!nome) nome = tipo === 'TEAM' ? (String(a[8]) === String(j.casaFid) ? j.casa : j.fora) : '—';
       return `<tr class="${c}">
         <td class="per">P${per}</td>
-        <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogio(tempo)}</td>
+        <td class="t" title="registado às ${esc((a[9] || '').slice(11, 19))}">${F.relogioMs(tempo)}</td>
         <td>${esc(nome)}</td>
         <td>${esc(texto)}${a[10] ? ' <small class="ed" title="corrigida pela mesa">✎</small>' : ''}</td>
       </tr>`;
@@ -87,13 +88,51 @@ function feed(j) {
   </tbody></table></div>`;
 }
 
-function desenhar(t, d, jogos, proximos) {
+const GRAFICOS = {
+  evolucao: [G.linhaEvolucao, G.descreverEvolucao],
+  parciais: [G.barrasParciais, G.descreverParciais],
+  lideranca: [G.barrasLideranca, G.descreverLideranca],
+};
+
+// Contentor de gráfico: o SVG só se desenha depois de medir a largura.
+function grafico(tipo, j, legenda = '') {
+  return `<div class="card-b chart-b">
+    <div class="grafico" data-grafico="${tipo}" data-fid="${esc(j.fid)}" role="img"></div>
+    ${legenda}
+  </div>`;
+}
+
+const legendaSeries = (j) => `<div class="legenda-graf">
+  <span><i class="sw a"></i>SC Farense</span>
+  <span><i class="sw b"></i>${esc(j.emCasa ? j.fora : j.casa)}</span>
+</div>`;
+
+function liderancaTexto(j) {
+  const l = j.lideranca;
+  if (!l) return '';
+  const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+  return `<p class="box-leg" style="padding:6px 0 0">${plural(l.empates || 0, 'empate', 'empates')} · ${
+    plural(l.trocas || 0, 'troca de liderança', 'trocas de liderança')}</p>`;
+}
+
+export function desenhar(t, d, jogos) {
   const partes = [];
   const mapaL = D.logosEquipa(t);
 
   if (jogos.length) {
     for (const j of jogos) {
+      const temPontos = (j.accoes || []).some((a) => a[4] === 'POINTS');
       partes.push(placar(j, mapaL));
+      if (temPontos) {
+        partes.push(card('Marcador', grafico('evolucao', j,
+          '<p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>')));
+      }
+      if ((j.parciais || []).length) {
+        partes.push(card('Pontos por período', grafico('parciais', j, legendaSeries(j))));
+      }
+      if (j.lideranca) {
+        partes.push(card('Liderança', grafico('lideranca', j, liderancaTexto(j)), '<span class="side">maior vantagem</span>'));
+      }
       partes.push(card('Últimas acções', feed(j)));
     }
   } else {
@@ -101,30 +140,6 @@ function desenhar(t, d, jogos, proximos) {
       <span class="live-dot" style="animation:none;background:var(--tx-3)"></span>
       Sem jogos do ${esc(t.nomeCurto)} a decorrer neste momento.
     </div>`);
-  }
-
-  if (proximos.length) {
-    partes.push(card('Próximos jogos', `<div class="mlist">
-      ${proximos.slice(0, 4).map((j) => {
-        const emCasa = String(j.casaFid) === String(t.teamFid);
-        const adv = emCasa ? j.fora : j.casa;
-        const advFid = emCasa ? j.foraFid : j.casaFid;
-        const quando = F.quando(j.inicio);
-        return `<div class="mrow mrow-estatico">
-          <div class="mdate"><b>${F.dia(j.inicio)}</b>${F.mes(j.inicio)}</div>
-          <div class="mopp"><b class="mteam">${logo(mapaL.get(String(advFid)), 'tlogo-sm')}<span>${esc(adv)}</span></b>
-            <span>${[emCasa ? 'Casa' : 'Fora', F.hora(j.inicio), j.jornada]
-              .filter(Boolean).map(esc).join(' · ')}</span></div>
-          <div class="mscore dim">${esc(quando)}</div>
-          <span></span>
-        </div>`;
-      }).join('')}
-    </div>`));
-  }
-
-  if (!jogos.length && !proximos.length) {
-    partes.push(card(null, vazio('Nada agendado',
-      'Não há jogos a decorrer nem datas futuras para este escalão.')));
   }
 
   const rodape = `<p class="nota">
@@ -136,6 +151,19 @@ function desenhar(t, d, jogos, proximos) {
   return partes.join('') + rodape;
 }
 
+// Desenha os SVG com a largura actual de cada contentor.
+function pintar(alvo, jogos) {
+  alvo.querySelectorAll('[data-grafico]').forEach((el) => {
+    const j = jogos.find((x) => String(x.fid) === el.dataset.fid);
+    const w = Math.round(el.clientWidth);
+    if (!j || !w) return;
+    const [desenho, descricao] = GRAFICOS[el.dataset.grafico];
+    el.innerHTML = desenho(j, w);
+    el.setAttribute('aria-label', descricao(j));
+    el.dataset.largura = String(w);
+  });
+}
+
 export default {
   render() {
     vivo = false;
@@ -145,6 +173,18 @@ export default {
   mount(root, t) {
     const alvo = root.querySelector('#live-root');
     let parado = false;
+    let ultimos = [];
+    let larguraVista = 0;
+
+    // Volta a desenhar os gráficos quando o espaço muda (rodar o telemóvel,
+    // redimensionar a janela, abrir/fechar a sidebar).
+    const obs = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => {
+        const w = Math.round(alvo.clientWidth);
+        if (w && w !== larguraVista) { larguraVista = w; pintar(alvo, ultimos); }
+      })
+      : null;
+    if (obs) obs.observe(alvo);
 
     async function tick() {
       if (parado) return;
@@ -155,10 +195,14 @@ export default {
         const meus = (lista) => (lista || []).filter(
           (j) => String(j.equipa.teamFid) === String(t.teamFid),
         );
-        const jogos = meus(d.jogos);
-        const proximos = meus(d.proximos);
+        const jogos = meus(d.jogos).map((j) => ({
+          ...j, emCasa: String(j.casaFid) === String(t.teamFid),
+        }));
+        ultimos = jogos;
         vivo = jogos.some((j) => j.status === 'LIVE');
-        alvo.innerHTML = desenhar(t, d, jogos, proximos);
+        alvo.innerHTML = desenhar(t, d, jogos);
+        larguraVista = Math.round(alvo.clientWidth);
+        pintar(alvo, jogos);
         document.dispatchEvent(new CustomEvent('swish:live', { detail: { vivo: vivo || jogos.length > 0 } }));
       } catch (e) {
         vivo = false;
@@ -171,6 +215,7 @@ export default {
 
     return () => {
       parado = true;
+      if (obs) obs.disconnect();
       clearTimeout(timer);
       timer = null;
     };
