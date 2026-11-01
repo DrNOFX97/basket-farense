@@ -46,7 +46,7 @@ Q_MATCH = """query L($projectKey: String!, $fid: String!) {
       awayTeam { players { player { fid name lastName number } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
         freeThrowsFailed fouls fibaRating plusMinus } } } }
-    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited sequence }
     events { code createdAt }
   } }"""
 
@@ -176,7 +176,8 @@ class Estado:
                 (a.get('actor') or {}).get('fid'), (a.get('actor') or {}).get('type'),
                 a.get('code'), a.get('subCode'), a.get('value'),
                 a.get('result'), a.get('teamFid'),
-                a.get('createdAt'), bool(a.get('isEdited'))])
+                a.get('createdAt'), bool(a.get('isEdited')),
+                int(a['sequence']) if a.get('sequence') is not None else None])
         out['eventos'] = sorted(([e.get('code'), e.get('createdAt')]
                                  for e in m.get('events') or []), key=lambda e: e[1] or '')
         return out

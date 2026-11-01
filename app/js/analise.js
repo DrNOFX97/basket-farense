@@ -23,8 +23,13 @@ export function nomePeriodo(p) {
 // Instante absoluto da ação, em ms desde o início do jogo.
 export const instante = (a) => inicioPeriodo(a[0]) + duracaoPeriodo(a[0]) - (a[1] || 0);
 
+// Ordem cronológica: período, depois tempo decrescente (o campo é o que falta).
+// Ao mesmo relógio manda a ordem de registo na mesa (índice 11, "sequence");
+// sem ela, a hora de criação. Só com a sequence o +/- calculado bate com o
+// boxscore da plataforma (214/216 jogadores, contra 131/216 com createdAt).
 export function accoesOrdenadas(j) {
   return [...(j.accoes || [])].sort((a, b) => (a[0] - b[0]) || (b[1] - a[1])
+    || (a[11] != null && b[11] != null ? a[11] - b[11] : 0)
     || String(a[9] || '').localeCompare(String(b[9] || '')));
 }
 
@@ -139,7 +144,8 @@ export function fluxo(j, per = 'todos') {
 }
 
 // Melhores de cada equipa. Pontos e faltas vêm das ações (respeitam o filtro
-// de período); valorização, +/- e minutos só existem para o jogo inteiro.
+// de período), tal como minutos e +/- (das substituições); a valorização só
+// existe para o jogo inteiro.
 export function lideres(j, per = 'todos') {
   const acc = new Map();
   const ref = (fid) => {
@@ -154,10 +160,13 @@ export function lideres(j, per = 'todos') {
   }
 
   const mins = minutos(j, per);
+  // +/-: jogo inteiro do boxscore; por período, calculado das substituições.
+  const tc = per === 'todos' ? null : tempoEmCampo(j, per);
   const lista = (lado) => ((j.jogadores && j.jogadores[lado]) || []).map((p) => {
     const a = acc.get(String(p.fid)) || { pts: 0, ft: 0 };
+    const pm = tc ? (tc[lado].jogadores.get(String(p.fid)) || {}).pm || 0 : (p.pm || 0);
     return { fid: p.fid, nome: p.nome, num: p.num, foto: p.foto || null,
-      pts: a.pts, ft: a.ft, val: p.val || 0, pm: p.pm || 0, min: mins[lado].get(String(p.fid)) || 0 };
+      pts: a.pts, ft: a.ft, val: p.val || 0, pm, min: mins[lado].get(String(p.fid)) || 0 };
   });
 
   const melhor = (jog, k) => {

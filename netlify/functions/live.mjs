@@ -54,7 +54,7 @@ const Q_MATCH = `query L($projectKey: String!, $fid: String!) {
       awayTeam { players { player { fid name lastName number } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
         freeThrowsFailed fouls fibaRating plusMinus } } } }
-    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited sequence }
     events { code createdAt }
   } }`;
 
@@ -268,6 +268,7 @@ async function jogoDetalhado(fid) {
       (a.actor || {}).fid, (a.actor || {}).type,
       a.code, a.subCode, a.value, a.result, a.teamFid,
       a.createdAt, !!a.isEdited,
+      a.sequence != null ? Math.trunc(a.sequence) : null,
     ]);
   }
   out.eventos = (m.events || []).map((e) => [e.code, e.createdAt])

@@ -105,7 +105,7 @@ Q_MATCH = """query M($projectKey: String!, $fid: String!) {
     boxscore {
       homeTeam { players { player { fid name lastName number photo } stats { %s } } }
       awayTeam { players { player { fid name lastName number photo } stats { %s } } } }
-    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited }
+    actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited sequence }
     events { code createdAt }
   } }""" % (' '.join(BOX_M), ' '.join(BOX_M))
 Q_STAND = """query S($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
@@ -184,8 +184,8 @@ def limpar_stats(d):
 
 # ------------------------------------------------------------------ pull -----
 def pull_match(pk, fid):
-    # Chave versionada: os caches antigos dos jogos nao tinham o campo photo.
-    d = gql(f'match_foto_{fid}', Q_MATCH, {'projectKey': pk, 'fid': fid})
+    # Chave versionada: os caches antigos nao tinham o campo photo (v1) nem sequence (v2).
+    d = gql(f'match_v2_{fid}', Q_MATCH, {'projectKey': pk, 'fid': fid})
     m = ((d.get('data') or {}).get('matchBy') or [None])[0]
     if not m:
         return None
@@ -226,7 +226,9 @@ def pull_match(pk, fid):
             (a.get('actor') or {}).get('fid'), (a.get('actor') or {}).get('type'),
             a.get('code'), a.get('subCode'), a.get('value'),
             a.get('result'), a.get('teamFid'),
-            a.get('createdAt'), bool(a.get('isEdited'))])
+            a.get('createdAt'), bool(a.get('isEdited')),
+            # Ordem de registo na mesa: desempata ações ao mesmo relógio.
+            int(a['sequence']) if a.get('sequence') is not None else None])
     out['eventos'] = sorted(([e.get('code'), e.get('createdAt')] for e in m.get('events') or []),
                             key=lambda e: e[1] or '')
     falhas = {}

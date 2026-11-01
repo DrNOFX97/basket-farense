@@ -107,7 +107,7 @@ function fluxoPainel(j, per) {
 const METRICAS = [
   ['pts', 'Pontos', true, (v) => `${v}`],
   ['val', 'Valorização', false, (v) => `${v}`],
-  ['pm', '+/−', false, (v) => (v > 0 ? `+${v}` : `${v}`)],
+  ['pm', '+/−', true, (v) => (v > 0 ? `+${v}` : `${v}`)],
   ['ft', 'Faltas', true, (v) => `${v}`],
   ['min', 'Minutos', true, (v) => F.mmss(v)],
 ];
@@ -134,7 +134,7 @@ function lideresPainel(j, per) {
       <div class="lid-t">SC Farense</div><div class="lid-t">${esc(nomeAdv(j))}</div>
       ${linhas}
     </div>
-    ${per === 'todos' ? '' : '<p class="box-leg">Pontos e faltas seguem o período escolhido. Os minutos vêm das substituições. Valorização e +/− só existem para o jogo inteiro.</p>'}
+    ${per === 'todos' ? '' : '<p class="box-leg">Pontos e faltas seguem o período escolhido. Minutos e +/− vêm das substituições. A valorização só existe para o jogo inteiro.</p>'}
   </div>`;
 }
 

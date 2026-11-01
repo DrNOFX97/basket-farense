@@ -98,6 +98,8 @@ for (const ep of dados.epocas) {
     }
   }
 }
+let pmTotal = 0;
+let pmDiverge = 0;
 // Painel de análise: cada separador × cada período, em jogos reais e simulados.
 const P = await import(pathToFileURL(path.join(RAIZ, 'app/js/painel.js')).href);
 const An = await import(pathToFileURL(path.join(RAIZ, 'app/js/analise.js')).href);
@@ -147,6 +149,13 @@ for (const ep of dados.epocas) {
           console.log(`  aviso tempo em campo ${j0.fid} ${lado}: ${Math.round(total / 1000)} s em vez de ~${Math.round(esperado / 1000)} s (log de substituições incoerente)`);
         }
       }
+      // +/- calculado das substituições (ordenado pela sequence da mesa) contra o boxscore.
+      for (const lado of ['casa', 'fora']) {
+        for (const p of j0.jogadores[lado]) {
+          pmTotal += 1;
+          if (((tc[lado].jogadores.get(String(p.fid)) || {}).pm || 0) !== (p.pm || 0)) pmDiverge += 1;
+        }
+      }
       const soma = An.periodosDe(jr).reduce((s, p) => s + An.totais(jr, p).casa.pts, 0);
       testes += 1;
       if (soma !== T.casa.pts) { falhas += 1; console.error(`  FALHA períodos ${j0.fid}: ${soma} ≠ ${T.casa.pts}`); }
@@ -154,6 +163,13 @@ for (const ep of dados.epocas) {
   }
 }
 P.definirEstado('comp', 'todos');
+{
+  // Tolerância de 3 %: sobram jogos com o log de substituições incoerente.
+  const semSeq = dados.epocas.every((e) => e.equipas.every((t) => t.jogos.every((x) => (x.accoes || []).every((a) => a[11] == null))));
+  testes += 1;
+  if (!semSeq && pmDiverge > 0.03 * pmTotal) { falhas += 1; console.error(`  FALHA +/-: ${pmDiverge}/${pmTotal} jogadores diferem do boxscore`); }
+  else console.log(`  +/- das substituições = boxscore em ${pmTotal - pmDiverge}/${pmTotal} jogadores${semSeq ? ' (dados ainda sem sequence)' : ''}`);
+}
 
 verificar('ao-vivo sem jogos', desenharLive(dados.epocas[0].equipas[0], { atualizado: null, erro: null }, []));
 

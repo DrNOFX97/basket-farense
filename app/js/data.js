@@ -1,6 +1,8 @@
 // Carregamento e derivação de dados. Tudo o que as vistas precisam de calcular
 // a partir do JSON vive aqui, para não haver contas espalhadas pelo interface.
 
+import { accoesOrdenadas } from './analise.js';
+
 let DADOS = null;
 
 // Uma segunda tentativa cobre falhas de rede transitórias; o erro final diz
@@ -117,10 +119,7 @@ const MARCOS = {
 
 // O campo "tempo" das acções é o que falta no período (600000 no início, 0 no
 // fim), por isso a ordem cronológica é tempo decrescente dentro do período.
-export function accoesOrdenadas(j) {
-  return [...(j.accoes || [])].sort((a, b) => (a[0] - b[0]) || (b[1] - a[1])
-    || String(a[9] || '').localeCompare(String(b[9] || '')));
-}
+export { accoesOrdenadas };
 
 // Leitura do jogo só do lado do Farense: cinco inicial, destaques e totais por período.
 export function resumoFarense(j) {
