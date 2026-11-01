@@ -113,6 +113,24 @@ function tabelaBox(lista, iniciais = new Set()) {
   <p class="box-leg"><b>MIN</b> minutos · <b>PTS</b> pontos · <b>2P / 3P</b> cestos convertidos · <b>LL</b> lances livres convertidos/tentados · <b>FT</b> faltas cometidas · <b>FR</b> faltas sofridas · <b>VAL</b> valorização · <b>+/−</b> diferença de pontos com o jogador em campo</p>`;
 }
 
+// Jogos sem boxscore: por realizar, terminados sem resultado ou só com o resultado.
+function semDetalhe(t, j, ctx) {
+  const adv = j.emCasa ? j.fora : j.casa;
+  if (j.jogado) {
+    return card('Só o resultado', `<div class="empty"><b>Sem boxscore nem play-by-play</b>A plataforma só tem o resultado deste jogo contra ${esc(adv)}.</div>`);
+  }
+  if (j.estado === 'LIVE') {
+    return card('A decorrer', `<div class="empty"><b>Jogo em direto</b>
+      <a href="#/${esc(ctx.epoca)}/${esc(t.id)}/ao-vivo">Abrir o marcador ao vivo →</a></div>`);
+  }
+  if (j.estado === 'CLOSED') {
+    return card('Resultado em falta', `<div class="empty"><b>Jogo terminado, sem resultado registado</b>A plataforma ainda não tem o marcador nem as estatísticas. Os dados atualizam-se sozinhos.</div>`);
+  }
+  const quando = F.quando(j.data);
+  return card('Jogo por realizar', `<div class="empty"><b>${esc(F.dataLonga(j.data))}${quando ? ' (' + esc(quando) + ')' : ''}</b>
+    ${j.emCasa ? 'Em casa' : 'Fora'} contra ${esc(adv)}${j.local ? ' · ' + esc(j.local) : ''}.<br>As estatísticas aparecem aqui depois do jogo.</div>`);
+}
+
 function destaques(j, r) {
   const d = r.destaques;
   const item = (rotulo, p, k, unidade, sinal = false) => (p ? `<div class="kpi"><span>${rotulo}</span>
@@ -275,9 +293,7 @@ export default {
            <div id="pbp-wrap">${pbp(j, nomes)}</div>
          </div>
          </div>`
-      : `<div style="margin-top:14px">${card('Detalhe indisponível',
-          vazio('Sem boxscore para este jogo',
-            'A plataforma só tem o resultado. Os jogos recentes têm play-by-play completo.'))}</div>`;
+      : `<div style="margin-top:14px">${semDetalhe(t, j, ctx)}</div>`;
 
     return `<a class="voltar" href="#/${esc(ctx.epoca)}/${esc(t.id)}/jogos">← Jogos</a>
       ${placar(t, j)}
