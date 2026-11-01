@@ -3,6 +3,7 @@
 
 import * as F from './format.js';
 import { esc } from './ui.js';
+import { accoesOrdenadas } from './data.js';
 
 function rotuloJornada(j, i) {
   const m = /(\d+)/.exec(j.jornada || '');
@@ -119,6 +120,10 @@ export function linhaPontos(jogos, largura) {
 const PERIODO_MS = 600000;
 const PROLONG_MS = 300000;
 
+function duracaoPeriodo(p) {
+  return p <= 4 ? PERIODO_MS : PROLONG_MS;
+}
+
 function inicioPeriodo(p) {
   return p <= 4 ? (p - 1) * PERIODO_MS : 4 * PERIODO_MS + (p - 5) * PROLONG_MS;
 }
@@ -129,12 +134,12 @@ export function pontosEvolucao(j) {
   const pts = [{ t: 0, d: 0, per: 1, tempo: 0, nos: 0, eles: 0 }];
   let nos = 0;
   let eles = 0;
-  for (const a of j.accoes || []) {
+  for (const a of accoesOrdenadas(j)) {
     const [per, tempo, , , code, , val, ok, eq] = a;
     if (code !== 'POINTS' || !ok) continue;
     if (String(eq) === meu) nos += val || 0;
     else eles += val || 0;
-    pts.push({ t: inicioPeriodo(per) + (tempo || 0), d: nos - eles, per, tempo, nos, eles });
+    pts.push({ t: inicioPeriodo(per) + duracaoPeriodo(per) - (tempo || 0), d: nos - eles, per, tempo, nos, eles });
   }
   const fim = inicioPeriodo((j.parciais || []).length + 1);
   return { pts, fim: Math.max(fim, pts[pts.length - 1].t) };
