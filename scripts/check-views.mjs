@@ -91,13 +91,48 @@ for (const ep of dados.epocas) {
       const marca = `${ep.id}/${t.id} ao-vivo simulado ${j.fid}`;
       verificar(marca, desenharLive(t, { atualizado: '2026-01-01 20:00:00', erro: null }, [sim]));
       for (const largura of [390, 820, 1440]) {
-        verificar(`${marca} evolução ${largura}`, G.linhaEvolucao(sim, largura) + G.descreverEvolucao(sim));
+        verificar(`${marca} fluxo ${largura}`, G.linhaFluxo(sim, largura) + G.descreverFluxo(sim));
         verificar(`${marca} parciais ${largura}`, G.barrasParciais(sim, largura) + G.descreverParciais(sim));
         if (sim.lideranca) verificar(`${marca} liderança ${largura}`, G.barrasLideranca(sim, largura) + G.descreverLideranca(sim));
       }
     }
   }
 }
+// Painel de análise: cada separador × cada período, em jogos reais e simulados.
+const P = await import(pathToFileURL(path.join(RAIZ, 'app/js/painel.js')).href);
+const An = await import(pathToFileURL(path.join(RAIZ, 'app/js/analise.js')).href);
+for (const ep of dados.epocas) {
+  for (const t of ep.equipas) {
+    for (const j0 of t.jogos.filter((x) => x.detalhe && (x.accoes || []).length)) {
+      const jr = { ...j0, emCasa: String(j0.casaFid) === String(t.teamFid) };
+      for (const j of [jr, simularLive(t, j0)]) {
+        for (const [aba] of P.ABAS) {
+          for (const per of ['todos', ...An.periodosDe(j)]) {
+            P.definirEstado(aba, per);
+            verificar(`${ep.id}/${t.id} painel ${j.status === 'LIVE' ? 'live ' : ''}${j0.fid} ${aba} ${per}`, P.painelHTML(j));
+            if (aba === 'fluxo') verificar(`  fluxo svg ${j0.fid} ${per}`, G.linhaFluxo(j, 390, per) + G.descreverFluxo(j, per));
+          }
+        }
+      }
+      // Números: ações contra boxscore e contra o resultado.
+      const T = An.totais(jr, 'todos');
+      for (const lado of ['casa', 'fora']) {
+        const box = (k) => j0.jogadores[lado].reduce((s, p) => s + (p[k] || 0), 0);
+        const x = T[lado];
+        const ok = x.ll === box('cll') && x.llf === box('fll') && x.c2 === box('c2')
+          && x.c3 === box('c3') && x.ft === box('ft') && x.pts === box('pts')
+          && x.pts === x.ll + 2 * x.c2 + 3 * x.c3;
+        testes += 1;
+        if (!ok) { falhas += 1; console.error(`  FALHA números ${j0.fid} ${lado}: ações ${JSON.stringify(x)} ≠ boxscore`); }
+      }
+      const soma = An.periodosDe(jr).reduce((s, p) => s + An.totais(jr, p).casa.pts, 0);
+      testes += 1;
+      if (soma !== T.casa.pts) { falhas += 1; console.error(`  FALHA períodos ${j0.fid}: ${soma} ≠ ${T.casa.pts}`); }
+    }
+  }
+}
+P.definirEstado('comp', 'todos');
+
 verificar('ao-vivo sem jogos', desenharLive(dados.epocas[0].equipas[0], { atualizado: null, erro: null }, []));
 
 // A vista da API lê localStorage, que fora do browser não existe: tem de aguentar.

@@ -1152,6 +1152,16 @@ table.box tbody tr:hover td.name { background: var(--surface-2); }
 .g-bar.a { fill: var(--ser-a); }
 .g-bar.b { fill: var(--ser-b); stroke: var(--tx-3); stroke-width: 1; }
 .g-hit { fill: transparent; }
+.g-racha { stroke: none; }
+.g-racha.m { fill: var(--gold); opacity: .16; }
+.g-racha.s { fill: var(--loss); opacity: .16; }
+.g-racha-t { font-size: 10.5px; font-weight: 700; font-family: var(--font); font-variant-numeric: tabular-nums;
+  paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+.g-racha-t.m { fill: var(--gold); }
+.g-racha-t.s { fill: var(--loss); }
+.g-troca { fill: var(--surface); stroke-width: 2; }
+.g-troca.m { stroke: var(--gold); }
+.g-troca.s { stroke: var(--loss); }
 .grafico[data-grafico="lideranca"] { min-height: 0; }
 .g-agora { fill: var(--win); stroke: var(--surface); stroke-width: 2; }
 .legenda-graf { display: flex; gap: 14px; flex-wrap: wrap; padding: 6px 0 0; font-size: 12px; color: var(--tx-2); }
@@ -1347,3 +1357,23 @@ tr.total td.name { color: var(--tx-2); }
 .g-area { stroke: none; }
 .g-area.m { fill: var(--gold); opacity: .22; }
 .g-area.s { fill: var(--loss); opacity: .22; }
+
+/* ------------------------------------------------ painel de análise do jogo */
+.an-barra { flex-wrap: wrap; gap: 10px 14px; }
+.an-barra .seg { max-width: 100%; }
+.kpis-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 767px) { .kpis-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tag-m { color: var(--gold); }
+.tag-s { color: var(--loss); }
+.rachas { list-style: none; margin: 12px 0 0; padding: 0; font-size: 12.5px; color: var(--tx-2); display: grid; gap: 4px; }
+.rachas li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.rachas li span { color: var(--tx-3); font-variant-numeric: tabular-nums; }
+.rachas b { font-variant-numeric: tabular-nums; }
+.lid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+.lid-t { font-size: 12px; font-weight: 650; color: var(--tx); padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.lid-k { grid-column: 1 / -1; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--tx-3); font-weight: 600; margin-top: 8px; }
+.lid-k small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.lid-c { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; }
+.lid-c .lid-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lid-c b { font-variant-numeric: tabular-nums; }
+.lid-c.vazio { color: var(--tx-3); }

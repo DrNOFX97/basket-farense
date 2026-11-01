@@ -3,7 +3,7 @@
 
 import * as F from './format.js';
 import { esc } from './ui.js';
-import { accoesOrdenadas } from './data.js';
+import { fluxo, inicioPeriodo, duracaoPeriodo, nomePeriodo, periodosDe } from './analise.js';
 
 function rotuloJornada(j, i) {
   const m = /(\d+)/.exec(j.jornada || '');
@@ -116,71 +116,54 @@ export function linhaPontos(jogos, largura) {
   </svg>`;
 }
 
-// ---------------------------------------------------------------- evolução ----
-const PERIODO_MS = 600000;
-const PROLONG_MS = 300000;
-
-function duracaoPeriodo(p) {
-  return p <= 4 ? PERIODO_MS : PROLONG_MS;
-}
-
-function inicioPeriodo(p) {
-  return p <= 4 ? (p - 1) * PERIODO_MS : 4 * PERIODO_MS + (p - 5) * PROLONG_MS;
-}
-
-// Diferença de pontos (Farense menos adversário) a cada cesto, ao longo do jogo.
-export function pontosEvolucao(j) {
-  const meu = String(j.emCasa ? j.casaFid : j.foraFid);
-  const pts = [{ t: 0, d: 0, per: 1, tempo: 0, nos: 0, eles: 0 }];
-  let nos = 0;
-  let eles = 0;
-  for (const a of accoesOrdenadas(j)) {
-    const [per, tempo, , , code, , val, ok, eq] = a;
-    if (code !== 'POINTS' || !ok) continue;
-    if (String(eq) === meu) nos += val || 0;
-    else eles += val || 0;
-    pts.push({ t: inicioPeriodo(per) + duracaoPeriodo(per) - (tempo || 0), d: nos - eles, per, tempo, nos, eles });
-  }
-  const nPer = Math.max(4, (j.parciais || []).length, j.periodo || 0);
-  const fim = Math.max(inicioPeriodo(nPer + 1), pts[pts.length - 1].t);
-
-  // Ao vivo a linha pára no relógio actual, não no fim do tempo regulamentar.
-  // O relógio do marcador vem em segundos ou em ms; abaixo de 36000 assume-se
-  // segundos (um período tem 600 s ou 600000 ms).
-  let agora = fim;
+// ------------------------------------------------------------------- fluxo ----
+// Instante (ms desde o início) até onde há jogo: ao vivo é o relógio actual.
+// O relógio do marcador vem em segundos ou em ms; abaixo de 36000 assume-se
+// segundos (um período tem 600 s ou 600000 ms).
+function instanteAgora(j, fim) {
   if (j.status === 'LIVE' && j.periodo && j.relogio != null) {
     const resta = j.relogio > 36000 ? j.relogio : j.relogio * 1000;
-    agora = Math.max(pts[pts.length - 1].t, inicioPeriodo(j.periodo) + duracaoPeriodo(j.periodo) - resta);
+    return Math.min(fim, inicioPeriodo(j.periodo) + duracaoPeriodo(j.periodo) - resta);
   }
-  return { pts, fim, agora };
+  return fim;
 }
 
-export function descreverEvolucao(j) {
-  const { pts } = pontosEvolucao(j);
-  const ds = pts.map((p) => p.d);
-  const max = Math.max(...ds);
-  const min = Math.min(...ds);
-  return `Diferença de pontos do Farense ao longo do jogo. Melhor momento: ${max > 0 ? '+' + max : max}; pior momento: ${min}; final: ${ds[ds.length - 1] > 0 ? '+' : ''}${ds[ds.length - 1]}.`;
+const sinal = (d) => (d > 0 ? `+${d}` : String(d));
+
+export function descreverFluxo(j, per = 'todos') {
+  const f = fluxo(j, per);
+  const ds = f.pts.map((p) => p.d);
+  const atual = ds[ds.length - 1];
+  const rachas = f.rachas.map((r) => `${r.nos ? 'Farense' : 'adversário'} ${r.pts}-0`).join(', ');
+  return `Diferença de pontos do Farense${per === 'todos' ? ' ao longo do jogo' : ` no ${nomePeriodo(per)}`}. `
+    + `Melhor momento: ${sinal(Math.max(...ds))}; pior: ${sinal(Math.min(...ds))}; atual: ${sinal(atual)}. `
+    + `${f.trocas.length} trocas de liderança. ${f.rachas.length ? `Rachas: ${rachas}.` : 'Sem rachas de 6 ou mais pontos.'}`;
 }
 
-export function linhaEvolucao(j, largura) {
-  const { pts, fim, agora } = pontosEvolucao(j);
-  if (pts.length < 2) return '';
+export function linhaFluxo(j, largura, per = 'todos') {
+  const f = fluxo(j, per);
+  if (f.pts.length < 2) return '';
+  const nPer = periodosDe(j).length;
+  const t0 = per === 'todos' ? 0 : inicioPeriodo(per);
+  const fim = per === 'todos' ? inicioPeriodo(Math.max(4, nPer) + 1) : t0 + duracaoPeriodo(per);
+  const agora = Math.max(f.pts[f.pts.length - 1].t, Math.min(fim, instanteAgora(j, fim)));
+  const vivo = agora < fim;
+
   const compacto = largura < 560;
-  const H = compacto ? 190 : 230;
-  const M = { top: 14, right: 12, bottom: 26, left: compacto ? 30 : 38 };
+  const H = compacto ? 200 : 240;
+  const M = { top: 18, right: 12, bottom: 26, left: compacto ? 32 : 40 };
   const W = Math.max(260, Math.round(largura));
   const plotW = W - M.left - M.right;
   const plotH = H - M.top - M.bottom;
 
-  // Eixo ajustado ao intervalo real (sempre com o zero), sem simetria forçada.
-  const dmax = Math.max(0, ...pts.map((p) => p.d));
-  const dmin = Math.min(0, ...pts.map((p) => p.d));
+  // Eixo ajustado ao intervalo real (sempre com o zero).
+  const dmax = Math.max(0, ...f.pts.map((p) => p.d));
+  const dmin = Math.min(0, ...f.pts.map((p) => p.d));
   const amp = Math.max(5, dmax - dmin);
   const passo = amp <= 10 ? 5 : amp <= 30 ? 10 : 20;
-  const hi = Math.max(passo, Math.ceil(dmax / passo) * passo * (dmax > 0 ? 1 : 0)) || passo;
-  const lo = Math.min(-passo, Math.floor(dmin / passo) * passo * (dmin < 0 ? 1 : 0)) || -passo;
-  const px = (t) => M.left + (t / fim) * plotW;
+  const hi = Math.max(passo, Math.ceil(dmax / passo) * passo);
+  const lo = Math.min(-passo, Math.floor(dmin / passo) * passo);
+  const px = (t) => M.left + ((t - t0) / (fim - t0)) * plotW;
   const py = (d) => M.top + ((hi - d) / (hi - lo)) * plotH;
   const y0 = py(0);
 
@@ -189,56 +172,83 @@ export function linhaEvolucao(j, largura) {
   const grade = ticks.map((v) => `<line class="g-grade${v === 0 ? ' zero' : ''}"
     x1="${M.left}" y1="${py(v).toFixed(1)}" x2="${W - M.right}" y2="${py(v).toFixed(1)}"/>`).join('');
   const eixoY = ticks.map((v) => `<text class="g-eixo" x="${M.left - 7}" y="${py(v).toFixed(1)}"
-    text-anchor="end" dominant-baseline="middle">${v > 0 ? '+' + v : v}</text>`).join('');
+    text-anchor="end" dominant-baseline="middle">${sinal(v)}</text>`).join('');
 
-  // Fronteiras e nomes dos períodos.
-  const nPer = Math.max(4, (j.parciais || []).length, j.periodo || 0);
+  // Eixo X: períodos (jogo inteiro) ou minutos (um período).
   let eixoX = '';
-  for (let p = 1; p <= nPer; p += 1) {
-    const ini = inicioPeriodo(p);
-    const f = Math.min(inicioPeriodo(p + 1), fim);
-    if (p > 1) {
-      eixoX += `<line class="g-grade" x1="${px(ini).toFixed(1)}" y1="${M.top}" x2="${px(ini).toFixed(1)}" y2="${H - M.bottom}"/>`;
+  if (per === 'todos') {
+    for (let p = 1; p <= Math.max(4, nPer); p += 1) {
+      const ini = inicioPeriodo(p);
+      if (p > 1) eixoX += `<line class="g-grade" x1="${px(ini).toFixed(1)}" y1="${M.top}" x2="${px(ini).toFixed(1)}" y2="${H - M.bottom}"/>`;
+      eixoX += `<text class="g-eixo" x="${((px(ini) + px(inicioPeriodo(p + 1))) / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${nomePeriodo(p)}</text>`;
     }
-    eixoX += `<text class="g-eixo" x="${((px(ini) + px(f)) / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${p <= 4 ? 'P' + p : 'Prol.'}</text>`;
+  } else {
+    const min = duracaoPeriodo(per) / 60000;
+    for (let m = 0; m <= min; m += min > 5 ? 2 : 1) {
+      const x = px(t0 + m * 60000);
+      if (m > 0 && m < min) eixoX += `<line class="g-grade" x1="${x.toFixed(1)}" y1="${M.top}" x2="${x.toFixed(1)}" y2="${H - M.bottom}"/>`;
+      const ancora = m === 0 ? 'start' : m === min ? 'end' : 'middle';
+      eixoX += `<text class="g-eixo" x="${x.toFixed(1)}" y="${H - 8}" text-anchor="${ancora}">${m} min</text>`;
+    }
   }
 
-  // Degraus: o valor mantém-se até ao cesto seguinte.
-  const pontosPath = [];
-  pts.forEach((p, i) => {
-    if (i) pontosPath.push([px(p.t), py(pts[i - 1].d)]);
-    pontosPath.push([px(p.t), py(p.d)]);
-  });
-  pontosPath.push([px(agora), py(pts[pts.length - 1].d)]);
-  const linha = pontosPath.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
-  const area = `${linha} L${px(agora).toFixed(1)} ${y0.toFixed(1)} L${px(0).toFixed(1)} ${y0.toFixed(1)} Z`;
-  const vivo = agora < fim;
-  const agoraMarca = vivo
-    ? `<circle class="g-agora" cx="${px(agora).toFixed(1)}" cy="${py(pts[pts.length - 1].d).toFixed(1)}" r="4.5"/>`
-    : '';
+  // Rachas: faixa por trás da linha, com o resultado da racha por cima.
+  const rachas = f.rachas.map((r) => {
+    const x1 = px(r.t0);
+    const x2 = Math.max(px(r.t1), x1 + 3);
+    const cls = r.nos ? 'm' : 's';
+    const rotulo = x2 - x1 >= 26
+      ? `<text class="g-racha-t ${cls}" x="${((x1 + x2) / 2).toFixed(1)}" y="${r.nos ? M.top + 11 : H - M.bottom - 5}" text-anchor="middle">${r.pts}-0</text>`
+      : '';
+    const tit = `Racha de ${r.pts}-0 do ${r.nos ? 'Farense' : 'adversário'} (${nomePeriodo(r.ini.per)} ${F.relogioMs(r.ini.tempo)} a ${F.relogioMs(r.fim.tempo)})`;
+    return `<g><title>${esc(tit)}</title>
+      <rect class="g-racha ${cls}" x="${x1.toFixed(1)}" y="${M.top}" width="${(x2 - x1).toFixed(1)}" height="${plotH}"/>${rotulo}</g>`;
+  }).join('');
 
-  const marcas = pts.slice(1).map((p) => `<g><title>${esc(
-    `P${p.per} ${F.relogioMs(p.tempo)} · Farense ${p.nos}–${p.eles} · ${p.d > 0 ? '+' : ''}${p.d}`,
+  // Degraus: o valor mantém-se até ao cesto seguinte.
+  const caminho = [];
+  f.pts.forEach((p, i) => {
+    if (i) caminho.push([px(p.t), py(f.pts[i - 1].d)]);
+    caminho.push([px(p.t), py(p.d)]);
+  });
+  const ultimo = f.pts[f.pts.length - 1];
+  caminho.push([px(agora), py(ultimo.d)]);
+  const linha = caminho.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const area = `${linha} L${px(agora).toFixed(1)} ${y0.toFixed(1)} L${px(f.pts[0].t).toFixed(1)} ${y0.toFixed(1)} Z`;
+
+  const hits = f.pts.slice(1).map((p) => `<g><title>${esc(
+    `${nomePeriodo(p.per)} ${F.relogioMs(p.tempo)} · Farense ${p.nos}–${p.eles} · ${sinal(p.d)}`,
   )}</title><circle class="g-hit" cx="${px(p.t).toFixed(1)}" cy="${py(p.d).toFixed(1)}" r="6"/></g>`).join('');
+
+  const trocas = f.trocas.map((tr) => {
+    const p = f.pts[tr.idx];
+    const tit = `Troca de liderança: ${tr.para === 'nos' ? 'Farense passa a liderar' : 'adversário passa a liderar'} (${nomePeriodo(p.per)} ${F.relogioMs(p.tempo)})`;
+    return `<g><title>${esc(tit)}</title>
+      <circle class="g-troca ${tr.para === 'nos' ? 'm' : 's'}" cx="${px(p.t).toFixed(1)}" cy="${py(p.d).toFixed(1)}" r="4.5"/></g>`;
+  }).join('');
+
+  const agoraMarca = vivo
+    ? `<circle class="g-agora" cx="${px(agora).toFixed(1)}" cy="${py(ultimo.d).toFixed(1)}" r="4.5"/>`
+    : '';
 
   return `<svg class="g-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
     role="presentation" focusable="false" aria-hidden="true">
     ${grade}
     ${eixoY}
     ${eixoX}
-    <clipPath id="ev-cima"><rect x="${M.left}" y="${M.top}" width="${plotW}" height="${(y0 - M.top).toFixed(1)}"/></clipPath>
-    <clipPath id="ev-baixo"><rect x="${M.left}" y="${y0.toFixed(1)}" width="${plotW}" height="${(H - M.bottom - y0).toFixed(1)}"/></clipPath>
-    <path class="g-area m" d="${area}" clip-path="url(#ev-cima)"/>
-    <path class="g-area s" d="${area}" clip-path="url(#ev-baixo)"/>
+    ${rachas}
+    <clipPath id="fl-cima"><rect x="${M.left}" y="${M.top}" width="${plotW}" height="${Math.max(0, y0 - M.top).toFixed(1)}"/></clipPath>
+    <clipPath id="fl-baixo"><rect x="${M.left}" y="${y0.toFixed(1)}" width="${plotW}" height="${Math.max(0, H - M.bottom - y0).toFixed(1)}"/></clipPath>
+    <path class="g-area m" d="${area}" clip-path="url(#fl-cima)"/>
+    <path class="g-area s" d="${area}" clip-path="url(#fl-baixo)"/>
     <path class="g-linha m" d="${linha}"/>
-    ${marcas}
+    ${hits}
+    ${trocas}
     ${agoraMarca}
   </svg>`;
 }
 
 // ---------------------------------------------------------------- parciais ----
-const nomePeriodo = (p) => (p <= 4 ? `P${p}` : p === 5 ? 'Prol.' : `Prol. ${p - 4}`);
-
 function parciaisFarense(j) {
   return (j.parciais || []).map(([p, casa, fora]) => ({
     p,

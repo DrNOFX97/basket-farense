@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import * as G from '../charts.js';
+import * as P from '../painel.js';
 import { esc, card, logo } from '../ui.js';
 
 let timer = null;
@@ -88,23 +88,10 @@ function feed(j) {
   </tbody></table></div>`;
 }
 
-const GRAFICOS = {
-  evolucao: [G.linhaEvolucao, G.descreverEvolucao],
-  parciais: [G.barrasParciais, G.descreverParciais],
-  lideranca: [G.barrasLideranca, G.descreverLideranca],
-};
-
-// Contentor de gráfico: o SVG só se desenha depois de medir a largura.
-function grafico(tipo, j, legenda = '') {
-  return `<div class="card-b chart-b">
-    <div class="grafico" data-grafico="${tipo}" data-fid="${esc(j.fid)}" role="img"></div>
-    ${legenda}
-  </div>`;
-}
-
-const legendaSeries = (j) => `<div class="legenda-graf">
-  <span><i class="sw a"></i>SC Farense</span>
-  <span><i class="sw b"></i>${esc(j.emCasa ? j.fora : j.casa)}</span>
+// Cartão com um gráfico simples (sem separadores nem filtro).
+const cartaoGrafico = (tipo, j, legenda = '') => `<div class="card-b chart-b">
+  ${P.contentorGrafico(tipo, j)}
+  ${legenda}
 </div>`;
 
 function liderancaTexto(j) {
@@ -123,15 +110,12 @@ export function desenhar(t, d, jogos) {
     for (const j of jogos) {
       const temPontos = (j.accoes || []).some((a) => a[4] === 'POINTS');
       partes.push(placar(j, mapaL));
-      if (temPontos) {
-        partes.push(card('Marcador', grafico('evolucao', j,
-          '<p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>')));
-      }
+      if (temPontos) partes.push(P.painelHTML(j));
       if ((j.parciais || []).length) {
-        partes.push(card('Pontos por período', grafico('parciais', j, legendaSeries(j))));
+        partes.push(card('Pontos por período', cartaoGrafico('parciais', j, P.legendaSeries(j))));
       }
       if (j.lideranca) {
-        partes.push(card('Liderança', grafico('lideranca', j, liderancaTexto(j)), '<span class="side">maior vantagem</span>'));
+        partes.push(card('Liderança', cartaoGrafico('lideranca', j, liderancaTexto(j)), '<span class="side">maior vantagem</span>'));
       }
       partes.push(card('Últimas acções', feed(j)));
     }
@@ -151,19 +135,6 @@ export function desenhar(t, d, jogos) {
   return partes.join('') + rodape;
 }
 
-// Desenha os SVG com a largura actual de cada contentor.
-function pintar(alvo, jogos) {
-  alvo.querySelectorAll('[data-grafico]').forEach((el) => {
-    const j = jogos.find((x) => String(x.fid) === el.dataset.fid);
-    const w = Math.round(el.clientWidth);
-    if (!j || !w) return;
-    const [desenho, descricao] = GRAFICOS[el.dataset.grafico];
-    el.innerHTML = desenho(j, w);
-    el.setAttribute('aria-label', descricao(j));
-    el.dataset.largura = String(w);
-  });
-}
-
 export default {
   render() {
     vivo = false;
@@ -174,17 +145,7 @@ export default {
     const alvo = root.querySelector('#live-root');
     let parado = false;
     let ultimos = [];
-    let larguraVista = 0;
-
-    // Volta a desenhar os gráficos quando o espaço muda (rodar o telemóvel,
-    // redimensionar a janela, abrir/fechar a sidebar).
-    const obs = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(() => {
-        const w = Math.round(alvo.clientWidth);
-        if (w && w !== larguraVista) { larguraVista = w; pintar(alvo, ultimos); }
-      })
-      : null;
-    if (obs) obs.observe(alvo);
+    const limparPainel = P.montar(alvo, () => ultimos);
 
     async function tick() {
       if (parado) return;
@@ -200,9 +161,10 @@ export default {
         }));
         ultimos = jogos;
         vivo = jogos.some((j) => j.status === 'LIVE');
+        const repor = P.guardarFoco(alvo);
         alvo.innerHTML = desenhar(t, d, jogos);
-        larguraVista = Math.round(alvo.clientWidth);
-        pintar(alvo, jogos);
+        P.pintar(alvo, jogos);
+        repor();
         document.dispatchEvent(new CustomEvent('swish:live', { detail: { vivo: vivo || jogos.length > 0 } }));
       } catch (e) {
         vivo = false;
@@ -215,7 +177,7 @@ export default {
 
     return () => {
       parado = true;
-      if (obs) obs.disconnect();
+      limparPainel();
       clearTimeout(timer);
       timer = null;
     };

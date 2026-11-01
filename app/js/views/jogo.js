@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 import * as D from '../data.js';
-import * as G from '../charts.js';
+import * as P from '../painel.js';
 import { esc, card, vazio, linhaCmp, logo, avatar } from '../ui.js';
 
 const TIPO = {
@@ -131,17 +131,6 @@ function semDetalhe(t, j, ctx) {
     ${j.emCasa ? 'Em casa' : 'Fora'} contra ${esc(adv)}${j.local ? ' · ' + esc(j.local) : ''}.<br>As estatísticas aparecem aqui depois do jogo.</div>`);
 }
 
-function destaques(j, r) {
-  const d = r.destaques;
-  const item = (rotulo, p, k, unidade, sinal = false) => (p ? `<div class="kpi"><span>${rotulo}</span>
-    <b>${esc(p.nome)}</b><span class="kpi-v">${sinal && p[k] > 0 ? '+' : ''}${p[k]} ${unidade}</span></div>` : '');
-  return card('Destaques', `<div class="card-b kpis kpis-sm kpis-3">
-    ${item('Marcador', d.pts, 'pts', 'pontos')}
-    ${item('Valorização', d.val, 'val', 'de valorização')}
-    ${item('+/−', d.pm, 'pm', 'em campo', true)}
-  </div>`);
-}
-
 function porPeriodo(r) {
   if (!r.periodos.length) return '';
   const soma = (k) => r.periodos.reduce((s, p) => s + (p[k] || 0), 0);
@@ -153,29 +142,6 @@ function porPeriodo(r) {
     <tbody>${r.periodos.map((p) => linha(`P${p.per}`, p)).join('')}
     <tr class="total"><td>Total</td><td><b>${soma('pts')}</b></td><td>${soma('sof')}</td><td>${soma('faltas')}</td><td>${soma('timeouts')}</td></tr>
     </tbody></table></div>`);
-}
-
-function comparador(j) {
-  const eu = j.emCasa ? j.jogadores.casa : j.jogadores.fora;
-  const ad = j.emCasa ? j.jogadores.fora : j.jogadores.casa;
-  const a = D.totaisJogo(eu);
-  const b = D.totaisJogo(ad);
-  if (!a.pts && !b.pts) return '';
-  const nomeAdv = j.emCasa ? j.fora : j.casa;
-  const pctLL = (t) => (t.cll + t.fll ? Math.round((t.cll / (t.cll + t.fll)) * 100) : 0);
-  const pc = (x) => `${x}%`;
-  return card('Comparação', `<div class="card-b"><div class="cmp">
-      ${linhaCmp('Pontos', a.pts, b.pts)}
-      ${linhaCmp('2 pontos conv.', a.c2, b.c2)}
-      ${linhaCmp('3 pontos conv.', a.c3, b.c3)}
-      ${linhaCmp('Lances livres (% conv.)', pctLL(a), pctLL(b), pc)}
-      ${linhaCmp('Faltas (menos é melhor)', a.ft, b.ft, (x) => x, { menosMelhor: true, semBarra: true })}
-      ${linhaCmp('Valorização', a.val, b.val)}
-    </div>
-    <div class="cmp-legenda">
-      <span><i class="sw a"></i>SC Farense</span>
-      <span><i class="sw b"></i>${esc(nomeAdv)}</span>
-    </div></div>`);
 }
 
 // Linha única no placar, da perspectiva do Farense.
@@ -271,12 +237,8 @@ export default {
              aria-selected="${aba === k}" class="${aba === k ? 'on' : ''}">${n}</button>`).join('')}
          </div>
          <div data-painel="resumo" id="painel-resumo" role="tabpanel" aria-labelledby="aba-resumo">
-         ${(j.accoes || []).some((a) => a[4] === 'POINTS') ? `<div style="margin-top:14px">${card('Evolução do marcador', `<div class="card-b chart-b">
-             <div class="grafico" id="grafico-evolucao" role="img"></div>
-             <p class="box-leg" style="padding:6px 0 0">Diferença de pontos do Farense a cada cesto: acima de zero o Farense está a ganhar.</p>
-           </div>`)}</div>` : ''}
-         <div class="grid grid-2" style="margin-top:14px">${porPeriodo(r)}${comparador(j)}</div>
-         <div style="margin-top:14px">${destaques(j, r)}</div>
+         ${(j.accoes || []).length ? `<div style="margin-top:14px">${P.painelHTML(j)}</div>` : ''}
+         <div style="margin-top:14px">${porPeriodo(r)}</div>
          </div>
          <div data-painel="boxscore" id="painel-boxscore" role="tabpanel" aria-labelledby="aba-boxscore" hidden>
          <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora, r.iniciais))}</div>
@@ -305,27 +267,7 @@ export default {
     if (!j || !j.detalhe) return;
     const nomes = D.nomesJogo(j);
 
-    const graf = root.querySelector('#grafico-evolucao');
-    let largura = 0;
-    const desenhar = () => {
-      const w = Math.round(graf.clientWidth);
-      if (!w || w === largura) return;
-      largura = w;
-      graf.innerHTML = G.linhaEvolucao(j, w);
-      graf.setAttribute('aria-label', G.descreverEvolucao(j));
-    };
-    let limpar;
-    if (graf) {
-      desenhar();
-      if (typeof ResizeObserver !== 'undefined') {
-        const obs = new ResizeObserver(desenhar);
-        obs.observe(graf);
-        limpar = () => obs.disconnect();
-      } else {
-        window.addEventListener('resize', desenhar);
-        limpar = () => window.removeEventListener('resize', desenhar);
-      }
-    }
+    const limpar = P.montar(root, () => [j]);
 
     const abas = [...root.querySelectorAll('[data-aba]')];
     const mostrar = (k) => {

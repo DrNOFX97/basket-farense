@@ -262,8 +262,9 @@ export function totaisJogo(lista) {
 }
 
 // Totais da equipa na época, somando os boxscores jogo a jogo.
-// Ao contrário do agregado da API, os falhados são reconstruídos a partir das
-// acções, por isso as percentagens de lançamento são fiáveis.
+// Só os lances livres têm convertidos e falhados. A fonte não regista
+// lançamentos de campo falhados (nem no boxscore nem no log de ações), por isso
+// não há percentagem de campo: 2P e 3P são apenas convertidos.
 export function totaisEquipa(t) {
   const lista = statsPlantel(t);
   const s = (k) => lista.reduce((x, a) => x + (a[k] || 0), 0);
