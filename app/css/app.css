@@ -1407,7 +1407,12 @@ td.nome-curto { max-width: 120px; overflow: hidden; text-overflow: ellipsis; whi
 .lid-c .pname-btn { flex: 1; min-width: 0; }
 body.sem-scroll { overflow: hidden; }
 
-.jcard-painel { max-height: 90vh; }
+.jcard-painel { max-height: 85vh; }
+/* dvh = altura realmente visível (sem a barra do browser). Deixa sempre uma
+   faixa livre no topo para tocar no fundo e fechar. */
+@supports (height: 100dvh) {
+  .jcard-painel { max-height: min(85dvh, calc(100dvh - 72px - env(safe-area-inset-top))); }
+}
 .jc-corpo { overflow-y: auto; padding: 4px 18px 22px; overscroll-behavior: contain; }
 .jc-fechar {
   position: absolute; top: 8px; right: 10px; width: 44px; height: 44px;

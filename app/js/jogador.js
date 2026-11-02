@@ -114,6 +114,9 @@ function criar() {
     gatilho = null;
   });
 
+  // Se a navegação mudar (botão Voltar, link), o cartão não pode ficar por cima.
+  window.addEventListener('hashchange', () => { if (dlg.open) dlg.close(); });
+
   // Puxador (telemóvel): arrastar ≥ 90 px para baixo fecha.
   const puxador = dlg.querySelector('.sheet-grip');
   let y0 = null;
