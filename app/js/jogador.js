@@ -117,27 +117,48 @@ function criar() {
   // Se a navegação mudar (botão Voltar, link), o cartão não pode ficar por cima.
   window.addEventListener('hashchange', () => { if (dlg.open) dlg.close(); });
 
-  // Puxador (telemóvel): arrastar ≥ 90 px para baixo fecha.
-  const puxador = dlg.querySelector('.sheet-grip');
+  // Arrastar para baixo fecha (≥ 90 px): pelo puxador, pelo cabeçalho do cartão
+  // ou, com o conteúdo no topo, de qualquer ponto do corpo.
+  const corpo = dlg.querySelector('.jc-corpo');
   let y0 = null;
-  puxador.addEventListener('pointerdown', (e) => {
-    y0 = e.clientY;
-    puxador.setPointerCapture(e.pointerId);
-    painel.style.transition = 'none';
-  });
-  puxador.addEventListener('pointermove', (e) => {
-    if (y0 !== null) painel.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`;
-  });
-  const largar = (e) => {
+  const comecar = (y) => { y0 = y; painel.style.transition = 'none'; };
+  const mover = (y) => { if (y0 !== null) painel.style.transform = `translateY(${Math.max(0, y - y0)}px)`; };
+  const largar = (y) => {
     if (y0 === null) return;
-    const dy = e.clientY - y0;
+    const dy = y - y0;
     y0 = null;
     painel.style.transition = '';
     painel.style.transform = '';
     if (dy > 90) dlg.close();
   };
-  puxador.addEventListener('pointerup', largar);
-  puxador.addEventListener('pointercancel', largar);
+
+  const puxador = dlg.querySelector('.sheet-grip');
+  puxador.addEventListener('pointerdown', (e) => { comecar(e.clientY); puxador.setPointerCapture(e.pointerId); });
+  puxador.addEventListener('pointermove', (e) => mover(e.clientY));
+  puxador.addEventListener('pointerup', (e) => largar(e.clientY));
+  puxador.addEventListener('pointercancel', (e) => largar(e.clientY));
+
+  // Corpo: só começa a arrastar se estava no topo e o gesto vai para baixo.
+  let tocou = null;
+  corpo.addEventListener('touchstart', (e) => {
+    tocou = corpo.scrollTop <= 0 ? e.touches[0].clientY : null;
+  }, { passive: true });
+  corpo.addEventListener('touchmove', (e) => {
+    if (tocou === null) return;
+    const y = e.touches[0].clientY;
+    if (y0 === null) {
+      if (y - tocou < 8) return;
+      comecar(tocou);
+    }
+    e.preventDefault();
+    mover(y);
+  }, { passive: false });
+  const fimToque = (e) => {
+    tocou = null;
+    if (y0 !== null) largar(e.changedTouches[0].clientY);
+  };
+  corpo.addEventListener('touchend', fimToque);
+  corpo.addEventListener('touchcancel', fimToque);
 }
 
 export function abrir(t, epocaId, fid, origem = null) {
