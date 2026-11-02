@@ -63,8 +63,10 @@ jobs:
           git commit -m "chore(dados): atualização automática"
           git push
 
+      # Disparo manual publica sempre (código novo sem dados novos); o agendado
+      # só publica quando os dados mudaram.
       - name: Publicar no Netlify
-        if: steps.mudou.outputs.mudou == 'true'
+        if: steps.mudou.outputs.mudou == 'true' || github.event_name == 'workflow_dispatch'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
