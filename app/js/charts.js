@@ -238,19 +238,20 @@ export function linhaFluxo(j, largura, per = 'todos') {
 }
 
 // ---------------------------------------------------------------- evolução ----
-export function descreverEvolucao(j) {
-  const f = fluxo(j, 'todos');
+export function descreverEvolucao(j, per = 'todos') {
+  const f = fluxo(j, per);
   const u = f.pts[f.pts.length - 1];
-  return `Evolução do resultado ao longo do jogo: Farense contra ${j.emCasa ? j.fora : j.casa}. `
+  return `Evolução do resultado ${per === 'todos' ? 'ao longo do jogo' : `no ${nomePeriodo(per)}`}: Farense contra ${j.emCasa ? j.fora : j.casa}. `
     + `Resultado atual ${u.nos}-${u.eles}. Maior vantagem do Farense: ${f.maiorNos}; do adversário: ${f.maiorEles}.`;
 }
 
 // Duas linhas em degrau com os pontos acumulados de cada equipa, cesto a cesto.
-export function linhaEvolucao(j, largura) {
-  const f = fluxo(j, 'todos');
+export function linhaEvolucao(j, largura, per = 'todos') {
+  const f = fluxo(j, per);
   if (f.pts.length < 2) return '';
   const nPer = periodosDe(j).length;
-  const fim = inicioPeriodo(Math.max(4, nPer) + 1);
+  const t0 = per === 'todos' ? 0 : inicioPeriodo(per);
+  const fim = per === 'todos' ? inicioPeriodo(Math.max(4, nPer) + 1) : t0 + duracaoPeriodo(per);
   const ultimo = f.pts[f.pts.length - 1];
   const agora = Math.max(ultimo.t, Math.min(fim, instanteAgora(j)));
   const vivo = agora < fim;
@@ -266,7 +267,7 @@ export function linhaEvolucao(j, largura) {
   const max = Math.max(1, ultimo.nos, ultimo.eles);
   const passo = max <= 20 ? 5 : max <= 60 ? 10 : max <= 120 ? 20 : 25;
   const topo = Math.max(passo, Math.ceil(max / passo) * passo);
-  const px = (t) => M.left + (t / fim) * plotW;
+  const px = (t) => M.left + ((t - t0) / (fim - t0)) * plotW;
   const py = (v) => base - (v / topo) * plotH;
 
   const ticks = [];
@@ -276,11 +277,22 @@ export function linhaEvolucao(j, largura) {
   const eixoY = ticks.map((v) => `<text class="g-eixo" x="${M.left - 7}" y="${py(v).toFixed(1)}"
     text-anchor="end" dominant-baseline="middle">${v}</text>`).join('');
 
+  // Eixo X: períodos (jogo inteiro) ou minutos (um período).
   let eixoX = '';
-  for (let p = 1; p <= Math.max(4, nPer); p += 1) {
-    const ini = inicioPeriodo(p);
-    if (p > 1) eixoX += `<line class="g-grade" x1="${px(ini).toFixed(1)}" y1="${M.top}" x2="${px(ini).toFixed(1)}" y2="${base}"/>`;
-    eixoX += `<text class="g-eixo" x="${((px(ini) + px(inicioPeriodo(p + 1))) / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${nomePeriodo(p)}</text>`;
+  if (per === 'todos') {
+    for (let p = 1; p <= Math.max(4, nPer); p += 1) {
+      const ini = inicioPeriodo(p);
+      if (p > 1) eixoX += `<line class="g-grade" x1="${px(ini).toFixed(1)}" y1="${M.top}" x2="${px(ini).toFixed(1)}" y2="${base}"/>`;
+      eixoX += `<text class="g-eixo" x="${((px(ini) + px(inicioPeriodo(p + 1))) / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${nomePeriodo(p)}</text>`;
+    }
+  } else {
+    const min = duracaoPeriodo(per) / 60000;
+    for (let m = 0; m <= min; m += min > 5 ? 2 : 1) {
+      const x = px(t0 + m * 60000);
+      if (m > 0 && m < min) eixoX += `<line class="g-grade" x1="${x.toFixed(1)}" y1="${M.top}" x2="${x.toFixed(1)}" y2="${base}"/>`;
+      const ancora = m === 0 ? 'start' : m === min ? 'end' : 'middle';
+      eixoX += `<text class="g-eixo" x="${x.toFixed(1)}" y="${H - 8}" text-anchor="${ancora}">${m} min</text>`;
+    }
   }
 
   // Degraus: o valor mantém-se até ao cesto seguinte e prolonga-se até "agora".

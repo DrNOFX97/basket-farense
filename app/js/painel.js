@@ -21,7 +21,7 @@ const GRAFICOS = {
   fluxo: [(j, w, per) => G.linhaFluxo(j, w, per), (j, per) => G.descreverFluxo(j, per)],
   parciais: [(j, w) => G.barrasParciais(j, w), (j) => G.descreverParciais(j)],
   lideranca: [(j, w) => G.barrasLideranca(j, w), (j) => G.descreverLideranca(j)],
-  evolucao: [(j, w) => G.linhaEvolucao(j, w), (j) => G.descreverEvolucao(j)],
+  evolucao: [(j, w, per) => G.linhaEvolucao(j, w, per), (j, per) => G.descreverEvolucao(j, per)],
 };
 
 // Contentor de gráfico: o SVG só se desenha depois de medir a largura.
@@ -37,17 +37,16 @@ const legendaSeries = (j) => `<div class="legenda-graf">
 
 export { legendaSeries };
 
-// Evolução do resultado: pontos acumulados das duas equipas. Mostra sempre o
-// jogo inteiro, por isso não segue o filtro de período.
+// Evolução do resultado: pontos acumulados das duas equipas, no jogo ou no período escolhido.
 function evolucaoPainel(j, per) {
-  if (A.fluxo(j, 'todos').pts.length < 2) return '<div class="empty">Sem cestos neste jogo.</div>';
+  if (A.fluxo(j, per).pts.length < 2) return '<div class="empty">Sem cestos neste período.</div>';
   return `<div class="card-b chart-b">
-    ${contentorGrafico('evolucao', j)}
+    ${contentorGrafico('evolucao', j, per)}
     <div class="legenda-graf">
       <span><i class="sw m"></i>SC Farense</span>
       <span><i class="sw s"></i>${esc(nomeAdv(j))}</span>
     </div>
-    ${per === 'todos' ? '' : '<p class="box-leg" style="padding:6px 0 0">Este gráfico mostra sempre o jogo inteiro.</p>'}
+    ${per === 'todos' ? '' : '<p class="box-leg" style="padding:6px 0 0">Pontos acumulados só neste período (começa em 0–0).</p>'}
   </div>`;
 }
 
