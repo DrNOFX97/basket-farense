@@ -237,6 +237,95 @@ export function linhaFluxo(j, largura, per = 'todos') {
   </svg>`;
 }
 
+// ---------------------------------------------------------------- evolução ----
+export function descreverEvolucao(j) {
+  const f = fluxo(j, 'todos');
+  const u = f.pts[f.pts.length - 1];
+  return `Evolução do resultado ao longo do jogo: Farense contra ${j.emCasa ? j.fora : j.casa}. `
+    + `Resultado atual ${u.nos}-${u.eles}. Maior vantagem do Farense: ${f.maiorNos}; do adversário: ${f.maiorEles}.`;
+}
+
+// Duas linhas em degrau com os pontos acumulados de cada equipa, cesto a cesto.
+export function linhaEvolucao(j, largura) {
+  const f = fluxo(j, 'todos');
+  if (f.pts.length < 2) return '';
+  const nPer = periodosDe(j).length;
+  const fim = inicioPeriodo(Math.max(4, nPer) + 1);
+  const ultimo = f.pts[f.pts.length - 1];
+  const agora = Math.max(ultimo.t, Math.min(fim, instanteAgora(j)));
+  const vivo = agora < fim;
+
+  const compacto = largura < 560;
+  const H = compacto ? 200 : 240;
+  const M = { top: 16, right: 30, bottom: 26, left: compacto ? 30 : 38 };
+  const W = Math.max(260, Math.round(largura));
+  const plotW = W - M.left - M.right;
+  const base = H - M.bottom;
+  const plotH = base - M.top;
+
+  const max = Math.max(1, ultimo.nos, ultimo.eles);
+  const passo = max <= 20 ? 5 : max <= 60 ? 10 : max <= 120 ? 20 : 25;
+  const topo = Math.max(passo, Math.ceil(max / passo) * passo);
+  const px = (t) => M.left + (t / fim) * plotW;
+  const py = (v) => base - (v / topo) * plotH;
+
+  const ticks = [];
+  for (let v = 0; v <= topo; v += passo) ticks.push(v);
+  const grade = ticks.map((v) => `<line class="g-grade${v === 0 ? ' zero' : ''}"
+    x1="${M.left}" y1="${py(v).toFixed(1)}" x2="${W - M.right}" y2="${py(v).toFixed(1)}"/>`).join('');
+  const eixoY = ticks.map((v) => `<text class="g-eixo" x="${M.left - 7}" y="${py(v).toFixed(1)}"
+    text-anchor="end" dominant-baseline="middle">${v}</text>`).join('');
+
+  let eixoX = '';
+  for (let p = 1; p <= Math.max(4, nPer); p += 1) {
+    const ini = inicioPeriodo(p);
+    if (p > 1) eixoX += `<line class="g-grade" x1="${px(ini).toFixed(1)}" y1="${M.top}" x2="${px(ini).toFixed(1)}" y2="${base}"/>`;
+    eixoX += `<text class="g-eixo" x="${((px(ini) + px(inicioPeriodo(p + 1))) / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${nomePeriodo(p)}</text>`;
+  }
+
+  // Degraus: o valor mantém-se até ao cesto seguinte e prolonga-se até "agora".
+  const caminho = (k) => {
+    const c = [];
+    f.pts.forEach((p, i) => {
+      if (i) c.push([px(p.t), py(f.pts[i - 1][k])]);
+      c.push([px(p.t), py(p[k])]);
+    });
+    c.push([px(agora), py(ultimo[k])]);
+    return c.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  };
+
+  const hits = f.pts.slice(1).map((p) => `<g><title>${esc(
+    `${nomePeriodo(p.per)} ${F.relogioMs(p.tempo)} · Farense ${p.nos}–${p.eles}`,
+  )}</title><circle class="g-hit" cx="${px(p.t).toFixed(1)}" cy="${py(Math.max(p.nos, p.eles)).toFixed(1)}" r="6"/></g>`).join('');
+
+  // Valores finais à direita; se estiverem muito juntos afastam-se.
+  const yN = py(ultimo.nos);
+  const yE = py(ultimo.eles);
+  const nosAcima = yN <= yE;
+  const afasta = Math.abs(yN - yE) < 13;
+  const yTN = afasta ? (nosAcima ? yN - 6 : yN + 6) : yN;
+  const yTE = afasta ? (nosAcima ? yE + 6 : yE - 6) : yE;
+  const xf = (px(agora) + 5).toFixed(1);
+  const finais = `<text class="g-valor forte" x="${xf}" y="${yTN.toFixed(1)}" dominant-baseline="middle">${ultimo.nos}</text>
+    <text class="g-valor forte" x="${xf}" y="${yTE.toFixed(1)}" dominant-baseline="middle">${ultimo.eles}</text>`;
+
+  const agoraMarca = vivo
+    ? `<circle class="g-agora" cx="${px(agora).toFixed(1)}" cy="${yN.toFixed(1)}" r="4.5"/>`
+    : '';
+
+  return `<svg class="g-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
+    role="presentation" focusable="false" aria-hidden="true">
+    ${grade}
+    ${eixoY}
+    ${eixoX}
+    <path class="g-linha s" d="${caminho('eles')}"/>
+    <path class="g-linha m" d="${caminho('nos')}"/>
+    ${hits}
+    ${finais}
+    ${agoraMarca}
+  </svg>`;
+}
+
 // ---------------------------------------------------------------- parciais ----
 function parciaisFarense(j) {
   return (j.parciais || []).map(([p, casa, fora]) => ({

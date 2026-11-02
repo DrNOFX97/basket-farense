@@ -10,17 +10,18 @@ import * as G from './charts.js';
 import * as F from './format.js';
 import { esc, avatar, linhaCmp, card, jogadorBtn } from './ui.js';
 
-const estado = { aba: 'comp', per: 'todos' };
+const estado = { aba: 'evo', per: 'todos' };
 
 // Só para testes: escolhe o separador e o período sem passar pelo DOM.
 export function definirEstado(aba, per) { estado.aba = aba; estado.per = per; }
 
-export const ABAS = [['comp', 'Comparação'], ['fluxo', 'Fluxo do jogo'], ['lid', 'Líderes']];
+export const ABAS = [['evo', 'Evolução'], ['comp', 'Comparação'], ['fluxo', 'Fluxo do jogo'], ['lid', 'Líderes']];
 
 const GRAFICOS = {
   fluxo: [(j, w, per) => G.linhaFluxo(j, w, per), (j, per) => G.descreverFluxo(j, per)],
   parciais: [(j, w) => G.barrasParciais(j, w), (j) => G.descreverParciais(j)],
   lideranca: [(j, w) => G.barrasLideranca(j, w), (j) => G.descreverLideranca(j)],
+  evolucao: [(j, w) => G.linhaEvolucao(j, w), (j) => G.descreverEvolucao(j)],
 };
 
 // Contentor de gráfico: o SVG só se desenha depois de medir a largura.
@@ -35,6 +36,20 @@ const legendaSeries = (j) => `<div class="legenda-graf">
 </div>`;
 
 export { legendaSeries };
+
+// Evolução do resultado: pontos acumulados das duas equipas. Mostra sempre o
+// jogo inteiro, por isso não segue o filtro de período.
+function evolucaoPainel(j, per) {
+  if (A.fluxo(j, 'todos').pts.length < 2) return '<div class="empty">Sem cestos neste jogo.</div>';
+  return `<div class="card-b chart-b">
+    ${contentorGrafico('evolucao', j)}
+    <div class="legenda-graf">
+      <span><i class="sw m"></i>SC Farense</span>
+      <span><i class="sw s"></i>${esc(nomeAdv(j))}</span>
+    </div>
+    ${per === 'todos' ? '' : '<p class="box-leg" style="padding:6px 0 0">Este gráfico mostra sempre o jogo inteiro.</p>'}
+  </div>`;
+}
 
 function perAtual(j) {
   const pers = A.periodosDe(j);
@@ -139,7 +154,8 @@ function lideresPainel(j, per) {
 export function painelHTML(j) {
   const per = perAtual(j);
   const pers = A.periodosDe(j);
-  const corpo = estado.aba === 'fluxo' ? fluxoPainel(j, per)
+  const corpo = estado.aba === 'evo' ? evolucaoPainel(j, per)
+    : estado.aba === 'fluxo' ? fluxoPainel(j, per)
     : estado.aba === 'lid' ? lideresPainel(j, per) : comparacao(j, per);
   const id = `an-${j.fid}`;
   return `<section class="card analise" data-analise="${esc(j.fid)}">

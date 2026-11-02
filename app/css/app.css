@@ -1233,6 +1233,8 @@ tr.total td.name { color: var(--tx-2); }
 .sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 .sw.a { background: var(--ser-a); }
 .sw.b { background: var(--ser-b); }
+.sw.m { background: var(--gold); }
+.sw.s { background: var(--loss); }
 
 .dot {
   display: inline-block; width: 6px; height: 6px; border-radius: 50%;
