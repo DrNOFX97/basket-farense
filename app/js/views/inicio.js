@@ -54,32 +54,16 @@ function ultimos(ep) {
     : vazio('Ainda sem jogos', 'Nenhum escalão disputou jogos nesta época.'));
 }
 
-function escaloes(ep) {
-  const grupo = (titulo, lista) => (lista.length ? `
-    <h3 class="nav-label">${titulo}</h3>
-    <div class="ini-grid">${lista.map((t) => {
-      const r = t.resumo || {};
-      return `<a class="ini-eq" href="${esc(hrefEquipa(ep, t))}">
-        <span class="ini-nome">${esc(nomeEquipa(ep, t))}<small>${esc(t.competicao)}</small></span>
-        <span class="nav-rec">${r.realizados ? `${r.v}-${r.d}` : '—'}</span>
-      </a>`;
-    }).join('')}</div>` : '');
-  const sen = ep.equipas.filter((t) => t.escalao === 'Seniores');
-  const form = ep.equipas.filter((t) => t.escalao !== 'Seniores');
-  return card('Escalões', `<div class="card-b">${grupo('Séniores', sen)}${grupo('Formação', form)}</div>`);
-}
-
 export default {
   render(ep) {
     return `
       <header class="head">
         <div class="eyebrow">${esc(ep.nome)}</div>
         <h1>SC Farense Basquetebol</h1>
-        <p class="comp">Todos os escalões num só sítio.</p>
+        <p class="comp">Escolha o escalão no menu.</p>
       </header>
       <div id="ini-vivo" aria-live="polite"></div>
-      <div class="grid grid-2">${proximos(ep)}${ultimos(ep)}</div>
-      <div style="margin-top:14px">${escaloes(ep)}</div>`;
+      <div class="grid grid-2">${proximos(ep)}${ultimos(ep)}</div>`;
   },
 
   // Jogos a decorrer, de qualquer escalão. Falha em silêncio: sem ligação à

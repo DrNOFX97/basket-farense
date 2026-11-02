@@ -144,6 +144,24 @@ function porPeriodo(r) {
     </tbody></table></div>`);
 }
 
+// Marcadores do Farense neste jogo: só quem pontuou, do que mais marcou para o que menos.
+function marcadores(lista) {
+  const ms = (lista || []).filter((p) => (p.pts || 0) > 0)
+    .sort((a, b) => (b.pts || 0) - (a.pts || 0) || (b.min || 0) - (a.min || 0));
+  if (!ms.length) return '';
+  const linhas = ms.map((p) => `<tr>
+    <td class="name">${p.fid ? jogadorBtn(p.fid, p.nome, p.foto) : `<span class="pname"><span>${esc(p.nome)}</span></span>`}</td>
+    <td><b>${p.pts}</b></td><td>${p.c2}</td><td>${p.c3}</td><td>${p.cll}/${p.cll + p.fll}</td>
+  </tr>`).join('');
+  return card('Marcadores', `<div class="tw"><table>
+    <thead><tr><th scope="col" class="name">Jogador</th>
+      <th scope="col" title="Pontos">PTS</th>
+      <th scope="col" title="Cestos de 2 pontos convertidos">2P</th>
+      <th scope="col" title="Cestos de 3 pontos convertidos">3P</th>
+      <th scope="col" title="Lances livres convertidos / tentados">LL</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>`);
+}
+
 // Linha única no placar, da perspectiva do Farense.
 function lideranca(j) {
   const l = j.lideranca;
@@ -239,7 +257,7 @@ export default {
          <div data-painel="resumo" id="painel-resumo" role="tabpanel" aria-labelledby="aba-resumo">
          ${(j.accoes || []).length ? `<div style="margin-top:14px">${P.painelHTML(j)}</div>` : ''}
          ${(j.accoes || []).length ? P.extrasHTML(j) : ''}
-         <div style="margin-top:14px">${porPeriodo(r)}</div>
+         <div class="grid grid-2" style="margin-top:14px">${marcadores(j.emCasa ? j.jogadores.casa : j.jogadores.fora)}${porPeriodo(r)}</div>
          </div>
          <div data-painel="boxscore" id="painel-boxscore" role="tabpanel" aria-labelledby="aba-boxscore" hidden>
          <div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', j.emCasa ? 'casa' : 'fora') + tabelaBox(j.emCasa ? j.jogadores.casa : j.jogadores.fora, r.iniciais))}</div>

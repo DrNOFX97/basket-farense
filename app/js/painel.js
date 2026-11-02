@@ -51,7 +51,6 @@ function comparacao(j, per) {
   if (!nos.pts && !eles.pts && !nos.ft && !eles.ft) {
     return '<div class="empty">Sem ações neste período.</div>';
   }
-  const comp = (t) => `${t.pts} = ${t.ll} + 2×${t.c2} + 3×${t.c3}`;
   const tec = nos.tecnicas || eles.tecnicas
     ? `<p class="box-leg">Faltas técnicas do banco ou do treinador (não entram nas faltas dos jogadores): Farense ${nos.tecnicas} · ${esc(nomeAdv(j))} ${eles.tecnicas}.</p>`
     : '';
@@ -63,8 +62,6 @@ function comparacao(j, per) {
       ${linhaCmp('Faltas (menos é melhor)', nos.ft, eles.ft, (x) => x, { menosMelhor: true })}
     </div>
     ${legendaSeries(j)}
-    <p class="box-leg" style="padding:10px 0 0">Pontos = lances livres + 2×(2 pontos) + 3×(3 pontos):
-      Farense <b>${comp(nos)}</b> · ${esc(nomeAdv(j))} <b>${comp(eles)}</b>.</p>
     ${tec}
     <p class="box-leg">2 e 3 pontos são lançamentos convertidos: a fonte não regista falhados de campo, por isso não há percentagem de lançamento.</p></div>`;
 }
