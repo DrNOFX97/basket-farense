@@ -278,5 +278,9 @@ comando de build e a pasta a publicar já vêm do `netlify.toml`.
   criação eram 448).
 - **Autenticação.** Continua a precisar de conta: o registo anónimo do Firebase
   está desativado neste projeto (`ADMIN_ONLY_OPERATION`, ver `ACTION_PLAN.md`).
+- **Datas corrigidas à mão.** Dois jogos do Sub 14 F vêm da fonte com 2026 em vez
+  de 2027 (fids 420914 e 420923, 10 e 17 de janeiro, domingos às 11:30). Estão
+  em `CORRECOES_DATA` no `build_data.py` e só se aplicam enquanto a fonte
+  devolver a data errada. A data certa é um palpite: confirmar na federação.
 - **Sem cookies nem contas.** A app é só de leitura e não guarda nada sobre
   quem a visita.

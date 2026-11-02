@@ -245,10 +245,26 @@ def pull_match(pk, fid):
     return out
 
 
+# Datas que a fonte tem erradas (jogos da época 2026/27 com ano de 2026 em vez
+# de 2027, Sub 14 F). Só se aplica enquanto a fonte devolver o valor errado:
+# se a federação corrigir, esta entrada deixa de ter efeito. fid -> (errada, certa).
+CORRECOES_DATA = {
+    '420914': ('2026-01-10T11:30:00.000Z', '2027-01-10T11:30:00.000Z'),
+    '420923': ('2026-01-17T11:30:00.000Z', '2027-01-17T11:30:00.000Z'),
+}
+
+
+def corrigir_data(m):
+    c = CORRECOES_DATA.get(str(m.get('fid')))
+    if c and m.get('date') == c[0]:
+        return {**m, 'date': c[1]}
+    return m
+
+
 def pull_team(t, epoca_id):
     pk, cf, tf = t['projectKey'], t['compFid'], t['teamFid']
     d = gql(f'team_{tf}_{cf}', Q_SCHED, {'projectKey': pk, 'competitionFid': cf, 'teamFid': tf})
-    ms = (d.get('data') or {}).get('teamMatch') or []
+    ms = [corrigir_data(m) for m in ((d.get('data') or {}).get('teamMatch') or [])]
     jogos = []
     for m in sorted(ms, key=lambda x: str(x.get('date'))):
         em_casa = (m.get('homeTeam') or {}).get('id') == tf
