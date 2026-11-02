@@ -100,8 +100,13 @@ export function futuros(t) {
   return t.jogos.filter((j) => !j.jogado);
 }
 
+// Próximo jogo: por jogar e com data de hoje em diante. A data vem da fonte
+// como texto local (sem fusos), por isso compara-se o dia como texto. Jogos
+// por jogar com data já passada (adiados ou erros da fonte) não contam.
 export function proximoJogo(t) {
-  const f = futuros(t);
+  const d = new Date();
+  const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const f = futuros(t).filter((j) => !j.data || String(j.data).slice(0, 10) >= hoje);
   return f.length ? f[0] : null;
 }
 
