@@ -12,6 +12,7 @@ import classificacao from './views/classificacao.js';
 import plantel from './views/plantel.js';
 import aovivo from './views/aovivo.js';
 import api from './views/api.js';
+import inicio from './views/inicio.js';
 
 const VISTAS = {
   resumo, jogos, jogo, classificacao, plantel, 'ao-vivo': aovivo,
@@ -141,7 +142,7 @@ function desenharMobile(ep, t) {
     </button></li>`;
   };
 
-  let html = '';
+  let html = '<ul><li><a class="sheet-item" href="#/inicio" data-fechar><span class="sheet-nome">Início<small>Todos os escalões</small></span></a></li></ul>';
   if (seniores.length) html += `<h3>Séniores</h3><ul>${seniores.map(item).join('')}</ul>`;
   if (formacao.length) html += `<h3>Formação</h3><ul>${formacao.map(item).join('')}</ul>`;
 
@@ -278,10 +279,34 @@ function renderApi() {
   window.scrollTo(0, 0);
 }
 
+// Página inicial do clube: abre por defeito (sem hash) e em #/inicio.
+function renderInicio(ep) {
+  const root = document.getElementById('conteudo');
+  root.innerHTML = `<div id="vista" class="vista-enter">${inicio.render(ep)}</div>`;
+  root.removeAttribute('aria-busy');
+  limpar = inicio.mount(root, ep) || null;
+
+  desenharSidebar(ep, ep.equipas[0]);
+  document.querySelectorAll('#nav .nav-item.on').forEach((b) => {
+    b.classList.remove('on');
+    b.removeAttribute('aria-current');
+  });
+  desenharMobile(ep, ep.equipas[0]);
+  document.getElementById('tabbar').innerHTML = '';
+  document.title = 'Início — Farense Basket';
+  window.scrollTo(0, 0);
+}
+
 async function rotear() {
   const p = parse();
   document.getElementById('api-link').classList.toggle('on', p.epoca === 'api');
+  document.getElementById('inicio-link').classList.toggle('on', !p.epoca || p.epoca === 'inicio');
+  if (limpar && (!p.epoca || p.epoca === 'inicio' || p.epoca === 'api')) {
+    try { limpar(); } catch { /* ignorar */ }
+    limpar = null;
+  }
   if (p.epoca === 'api') { renderApi(); return; }
+  if (!p.epoca || p.epoca === 'inicio') { renderInicio(epoca(arranque().epoca)); return; }
   let ep = epoca(p.epoca);
   let t = ep ? equipa(ep.id, p.equipa) : null;
 
@@ -346,6 +371,7 @@ function ligarSheet() {
 
   sheet.addEventListener('click', (e) => {
     if (e.target === sheet) { fechar(); return; }
+    if (e.target.closest('[data-fechar]')) { fechar(); return; }
     const b = e.target.closest('[data-equipa]');
     if (!b) return;
     const { ep } = contexto();
@@ -432,7 +458,7 @@ function alternarTema() {
 }
 
 // Atalhos de teclado (desktop). `g` abre um "acorde": g + letra muda de secção.
-const SECCAO_POR_TECLA = { r: 'resumo', j: 'jogos', c: 'classificacao', p: 'plantel', l: 'ao-vivo' };
+const SECCAO_POR_TECLA = { i: 'inicio', r: 'resumo', j: 'jogos', c: 'classificacao', p: 'plantel', l: 'ao-vivo' };
 
 function ligarAtalhos() {
   const ajuda = document.getElementById('ajuda');
@@ -453,7 +479,7 @@ function ligarAtalhos() {
       aguardaG = false;
       clearTimeout(timer);
       const vista = SECCAO_POR_TECLA[e.key];
-      if (vista) { e.preventDefault(); location.hash = href(ep.id, t.id, vista); }
+      if (vista) { e.preventDefault(); location.hash = vista === 'inicio' ? '#/inicio' : href(ep.id, t.id, vista); }
       return;
     }
 

@@ -19,6 +19,7 @@ const { default: classificacao } = await view('classificacao.js');
 const { default: plantel } = await view('plantel.js');
 const { default: aovivo } = await view('aovivo.js');
 const { default: api } = await view('api.js');
+const { default: inicio } = await view('inicio.js');
 
 const dados = JSON.parse(fs.readFileSync(path.join(RAIZ, 'data/farense.json'), 'utf8'));
 
@@ -45,6 +46,7 @@ function verificar(nome, html) {
 }
 
 for (const ep of dados.epocas) {
+  verificar(`${ep.id} inicio`, inicio.render(ep));
   for (const t of ep.equipas) {
     const ctx = { epoca: ep.id, equipa: t.id, vista: 'resumo', param: null };
     const marca = `${ep.id}/${t.id}`;

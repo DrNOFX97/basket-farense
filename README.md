@@ -40,6 +40,9 @@ Cinco vistas por escalão, com URL própria (`#/época/escalão/vista`):
   melhores marcadores e os números da época.
 - **Jogos** — todos os jogos agrupados por mês, com filtros (casa, fora,
   realizados, por jogar).
+- **Início** — página inicial do clube (`#/inicio`, abre por defeito): jogos ao
+  vivo, próximos jogos e últimos resultados de todos os escalões, com ligação a
+  cada jogo, e a lista de escalões. Atalho `g` `i`.
 - **Detalhe de jogo** — marcador, parciais por período, liderança, boxscore
   e play-by-play com marcador corrido. O painel de análise tem três
   separadores (Comparação, Fluxo do jogo, Líderes) e um filtro de período
