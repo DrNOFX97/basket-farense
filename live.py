@@ -21,6 +21,14 @@ TTL_AGENDA_JOGO = 30
 JANELA_ANTES = datetime.timedelta(minutes=30)
 JANELA_DEPOIS = datetime.timedelta(hours=4)
 
+
+
+def limpar_foto(v):
+    """A API usa 'N/A' quando o jogador nao tem fotografia."""
+    v = str(v or '').strip()
+    return None if not v or v.upper() in ('N/A', 'NA', 'NULL') else v
+
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(BASE, 'data', 'farense.json')
 
@@ -40,12 +48,12 @@ Q_MATCH = """query L($projectKey: String!, $fid: String!) {
     timeStatus { status period time }
     stats { biggestLead { homeTeam awayTeam } timesTied leadChanges }
     boxscore {
-      homeTeam { players { player { fid name lastName number } stats {
+      homeTeam { players { player { fid name lastName number photo } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
-        freeThrowsFailed fouls fibaRating plusMinus } } }
-      awayTeam { players { player { fid name lastName number } stats {
+        freeThrowsFailed fouls receivedFouls fibaRating plusMinus } } }
+      awayTeam { players { player { fid name lastName number photo } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
-        freeThrowsFailed fouls fibaRating plusMinus } } } }
+        freeThrowsFailed fouls receivedFouls fibaRating plusMinus } } } }
     actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited sequence }
     events { code createdAt }
   } }"""
@@ -167,8 +175,9 @@ class Estado:
                     'min': s.get('timePlayed'), 'pts': s.get('points'),
                     'c2': s.get('inArcThrowsMade'), 'c3': s.get('outArcThrowsMade'),
                     'cll': s.get('freeThrowsMade'), 'fll': s.get('freeThrowsFailed'),
-                    'ft': s.get('fouls'), 'val': s.get('fibaRating'),
-                    'pm': s.get('plusMinus')})
+                    'foto': limpar_foto(p.get('photo')),
+                    'ft': s.get('fouls'), 'fr': s.get('receivedFouls'),
+                    'val': s.get('fibaRating'), 'pm': s.get('plusMinus')})
         for a in sorted(m.get('actions') or [],
                         key=lambda a: (a.get('period') or 0, a.get('time') or 0)):
             out['accoes'].append([

@@ -62,11 +62,11 @@ function placar(t, j) {
   </div>`;
 }
 
-function cabecalhoBox(nome, lado) {
+export function cabecalhoBox(nome, lado) {
   return `<div class="card-h"><h2>${esc(nome)}</h2><span class="side">${lado}</span></div>`;
 }
 
-function tabelaBox(lista, iniciais = new Set(), lado = 'nos') {
+export function tabelaBox(lista, iniciais = new Set(), lado = 'nos') {
   if (!lista || !lista.length) return vazio('Sem boxscore', 'Ainda não há estatísticas individuais deste jogo.');
   const jogadores = [...lista].sort((a, b) => (b.min || 0) - (a.min || 0) || (b.pts || 0) - (a.pts || 0));
 
@@ -79,7 +79,7 @@ function tabelaBox(lista, iniciais = new Set(), lado = 'nos') {
     <td>${p.c3}</td>
     <td>${p.cll}/${p.cll + p.fll}</td>
     <td class="${p.ft >= 5 ? 'f5' : p.ft === 4 ? 'f4' : ''}"${p.ft >= 5 ? ' title="Excluído por 5 faltas"' : p.ft === 4 ? ' title="4 faltas"' : ''}>${p.ft}</td>
-    <td>${p.fr}</td>
+    <td>${p.fr ?? 0}</td>
     <td>${p.val}</td>
     <td>${p.pm > 0 ? '+' : ''}${p.pm}</td>
   </tr>`).join('');
@@ -131,7 +131,7 @@ function semDetalhe(t, j, ctx) {
     ${j.emCasa ? 'Em casa' : 'Fora'} contra ${esc(adv)}${j.local ? ' · ' + esc(j.local) : ''}.<br>As estatísticas aparecem aqui depois do jogo.</div>`);
 }
 
-function porPeriodo(r) {
+export function porPeriodo(r) {
   if (!r.periodos.length) return '';
   const soma = (k) => r.periodos.reduce((s, p) => s + (p[k] || 0), 0);
   const linha = (rot, p) => `<tr><td>${rot}</td><td><b>${p.pts}</b></td><td>${p.sof}</td><td>${p.faltas}</td><td>${p.timeouts}</td></tr>`;
@@ -145,7 +145,7 @@ function porPeriodo(r) {
 }
 
 // Marcadores do Farense neste jogo: só quem pontuou, do que mais marcou para o que menos.
-function marcadores(lista) {
+export function marcadores(lista) {
   const ms = (lista || []).filter((p) => (p.pts || 0) > 0)
     .sort((a, b) => (b.pts || 0) - (a.pts || 0) || (b.min || 0) - (a.min || 0));
   if (!ms.length) return '';

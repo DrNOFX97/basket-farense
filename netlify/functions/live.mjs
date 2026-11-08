@@ -22,6 +22,12 @@ const GRAPHQL = 'https://internal.nbn23.app/graphql';
 const PKG = 'com.nbn23.fansapp';
 const VER = '2.10.0';
 
+// A API usa 'N/A' quando o jogador não tem fotografia.
+const limparFoto = (v) => {
+  const x = String(v || '').trim();
+  return !x || ['N/A', 'NA', 'NULL'].includes(x.toUpperCase()) ? null : x;
+};
+
 const TTL_VIVO = 4000;
 const TTL_IDLE = 25000;
 const TTL_AGENDA = 5 * 60 * 1000;
@@ -48,12 +54,12 @@ const Q_MATCH = `query L($projectKey: String!, $fid: String!) {
     timeStatus { status period time }
     stats { biggestLead { homeTeam awayTeam } timesTied leadChanges }
     boxscore {
-      homeTeam { players { player { fid name lastName number } stats {
+      homeTeam { players { player { fid name lastName number photo } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
-        freeThrowsFailed fouls fibaRating plusMinus } } }
-      awayTeam { players { player { fid name lastName number } stats {
+        freeThrowsFailed fouls receivedFouls fibaRating plusMinus } } }
+      awayTeam { players { player { fid name lastName number photo } stats {
         timePlayed points inArcThrowsMade outArcThrowsMade freeThrowsMade
-        freeThrowsFailed fouls fibaRating plusMinus } } } }
+        freeThrowsFailed fouls receivedFouls fibaRating plusMinus } } } }
     actions { period time actor { fid type } code subCode value result teamFid createdAt isEdited sequence }
     events { code createdAt }
   } }`;
@@ -254,7 +260,9 @@ async function jogoDetalhado(fid) {
         c3: s.outArcThrowsMade,
         cll: s.freeThrowsMade,
         fll: s.freeThrowsFailed,
+        foto: limparFoto(p.photo),
         ft: s.fouls,
+        fr: s.receivedFouls,
         val: s.fibaRating,
         pm: s.plusMinus,
       });

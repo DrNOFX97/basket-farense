@@ -2,6 +2,7 @@ import * as F from '../format.js';
 import * as D from '../data.js';
 import * as P from '../painel.js';
 import { esc, card, logo } from '../ui.js';
+import { marcadores, porPeriodo, tabelaBox, cabecalhoBox } from './jogo.js';
 
 let timer = null;
 let vivo = false;
@@ -111,12 +112,21 @@ export function desenhar(t, d, jogos) {
       const temPontos = (j.accoes || []).some((a) => a[4] === 'POINTS');
       partes.push(placar(j, mapaL));
       if (temPontos) partes.push(P.painelHTML(j));
+      if (temPontos) partes.push(P.extrasHTML(j));
       if ((j.parciais || []).length) {
         partes.push(card('Pontos por período', cartaoGrafico('parciais', j, P.legendaSeries(j))));
       }
+      const r = D.resumoFarense(j);
+      const lado = j.emCasa ? 'casa' : 'fora';
+      const adv = j.emCasa ? 'fora' : 'casa';
+      const mar = marcadores(j.jogadores[lado]);
+      const per = porPeriodo(r);
+      if (mar || per) partes.push(`<div class="grid grid-2" style="margin-top:14px">${mar}${per}</div>`);
       if (j.lideranca) {
         partes.push(card('Liderança', cartaoGrafico('lideranca', j, liderancaTexto(j)), '<span class="side">maior vantagem</span>'));
       }
+      partes.push(`<div style="margin-top:14px">${card(null, cabecalhoBox('SC Farense', lado) + tabelaBox(j.jogadores[lado], r.iniciais))}</div>`);
+      partes.push(`<div style="margin-top:14px">${card(null, cabecalhoBox(j.emCasa ? j.fora : j.casa, adv) + tabelaBox(j.jogadores[adv], new Set(), 'adv'))}</div>`);
       partes.push(card('Últimas acções', feed(j)));
     }
   } else {
