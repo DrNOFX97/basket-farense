@@ -3,7 +3,7 @@
 // tudo o que se calcula a partir das ações. Usado no detalhe de jogo e no Ao vivo.
 //
 // O estado (separador e período) vive aqui, não na vista, para sobreviver aos
-// redesenhos de 5 em 5 segundos do Ao vivo.
+// redesenhos de 4 em 4 segundos do Ao vivo.
 
 import * as A from './analise.js';
 import * as G from './charts.js';

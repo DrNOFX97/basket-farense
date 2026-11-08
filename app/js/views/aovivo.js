@@ -138,7 +138,7 @@ export function desenhar(t, d, jogos) {
 
   const rodape = `<p class="nota">
     ${d.atualizado ? `Actualizado às ${esc(d.atualizado.slice(11))}.` : ''}
-    A informação é lida da plataforma a cada ${vivo ? '5' : '20'} segundos.
+    A informação é lida da plataforma a cada ${vivo ? '4' : '25'} segundos.
     ${d.erro ? `<br><span style="color:var(--loss)">${esc(d.erro)}</span>` : ''}
   </p>`;
 
@@ -180,7 +180,7 @@ export default {
         vivo = false;
         alvo.innerHTML = `<div class="aviso erro">Não foi possível falar com o servidor: ${esc(e.message)}</div>`;
       }
-      if (!parado) timer = setTimeout(tick, vivo ? 5000 : 20000);
+      if (!parado) timer = setTimeout(tick, vivo ? 4000 : 25000);
     }
 
     tick();

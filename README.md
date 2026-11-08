@@ -271,7 +271,7 @@ comando de build e a pasta a publicar já vêm do `netlify.toml`.
   não deslocar os jogos uma hora.
 - **Ao vivo por polling.** A API não tem subscrições, WebSockets nem SSE. O
   servidor consulta a API a cada 4 s quando há jogo a decorrer e a cada 25 s
-  quando não há; o cliente lê `/api/live` a cada 5 s ou 20 s.
+  quando não há; o cliente lê `/api/live` a cada 4 s ou 25 s.
 - **Ordem das ações.** Ao mesmo relógio, a ordem certa é a de registo na
   mesa (`sequence`, índice 11 de cada ação). Só com ela o +/- calculado das
   substituições bate com o boxscore (683 de 689 jogadores; com a hora de
