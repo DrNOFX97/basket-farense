@@ -22,6 +22,7 @@ Uso:
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -50,11 +51,23 @@ TOKEN_CACHE = os.path.join(_cache_dir(), 'token.json')
 ENV_FILE = os.path.join(BASE, '.env')
 
 
-def _post(url, body, headers=None, timeout=30):
+def _post(url, body, headers=None, timeout=60, tentativas=4):
     req = urllib.request.Request(
         url, data=json.dumps(body).encode(),
         headers={'Content-Type': 'application/json', **(headers or {})},
         method='POST')
+    # Timeouts e falhas de ligação são pontuais (já deitaram uma corrida abaixo):
+    # repete com espera crescente antes de desistir.
+    for n in range(tentativas):
+        try:
+            return _enviar(req, timeout)
+        except (TimeoutError, urllib.error.URLError, ConnectionError):
+            if n == tentativas - 1:
+                raise
+            time.sleep(3 * (n + 1))
+
+
+def _enviar(req, timeout):
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, json.loads(r.read() or b'{}')
