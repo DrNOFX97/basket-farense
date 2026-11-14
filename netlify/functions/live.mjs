@@ -156,8 +156,9 @@ function haJogoNaJanela() {
   return false;
 }
 
-async function carregarAgenda() {
-  if (agenda.mapa && Date.now() - agenda.em < (haJogoNaJanela() ? TTL_AGENDA_JOGO : TTL_AGENDA)) {
+// forcar: ignora a cache (usado pelo vigia, que precisa do estado actual).
+export async function carregarAgenda(forcar = false) {
+  if (!forcar && agenda.mapa && Date.now() - agenda.em < (haJogoNaJanela() ? TTL_AGENDA_JOGO : TTL_AGENDA)) {
     return agenda.mapa;
   }
 

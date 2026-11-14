@@ -9,6 +9,12 @@ on:
   schedule:
     - cron: '*/20 * * * *'
   workflow_dispatch:
+    inputs:
+      publicar:
+        description: 'sempre = publica mesmo sem dados novos; se-mudou = só publica se os dados mudaram (usado pelo vigia)'
+        type: choice
+        options: [sempre, se-mudou]
+        default: sempre
 
 concurrency:
   group: atualizar-dados
@@ -63,10 +69,11 @@ jobs:
           git commit -m "chore(dados): atualização automática"
           git push
 
-      # Disparo manual publica sempre (código novo sem dados novos); o agendado
-      # só publica quando os dados mudaram.
+      # Disparo manual publica sempre (código novo sem dados novos), salvo
+      # publicar=se-mudou (o vigia do Netlify); o agendado só publica quando os
+      # dados mudaram.
       - name: Publicar no Netlify
-        if: steps.mudou.outputs.mudou == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.mudou.outputs.mudou == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publicar != 'se-mudou')
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
