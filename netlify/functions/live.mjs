@@ -37,6 +37,7 @@ const JANELA_ANTES = 30 * 60 * 1000;
 const JANELA_DEPOIS = 4 * 3600 * 1000;
 const PRAZO = 12000;
 const TIMEOUT = 8000;
+const ultimoBom = new Map(); // fid → { j, em }: último detalhe obtido sem erro
 
 const Q_SCHED = `query S($projectKey: String!, $competitionFid: String!, $teamFid: String!) {
   teamMatch(projectKey: $projectKey, competitionFid: $competitionFid, teamFid: $teamFid) {
@@ -310,9 +311,16 @@ async function atualizar() {
     for (const fid of vivos) {
       try {
         const j = await jogoDetalhado(fid);
-        if (j && (j.status === 'LIVE' || j.estadoRelogio === 'LIVE')) jogos.push(j);
+        if (j && (j.status === 'LIVE' || j.estadoRelogio === 'LIVE')) {
+          jogos.push(j);
+          ultimoBom.set(fid, { j, em: Date.now() });
+        }
       } catch (e) {
         erro = `jogo ${fid}: ${e.message}`;
+        // Falha pontual da plataforma: mantém o último estado bom em vez de
+        // fazer o jogo desaparecer do direto.
+        const ant = ultimoBom.get(fid);
+        if (ant && Date.now() - ant.em < 90000) jogos.push(ant.j);
       }
     }
   } catch (e) {

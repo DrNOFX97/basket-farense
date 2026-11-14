@@ -81,6 +81,7 @@ class Estado:
         self.tsched = 0.0
         self.snap = {'atualizado': None, 'jogos': [], 'erro': None}
         self.ultimo_erro = None
+        self.ultimo_bom = {}  # fid -> (jogo, instante) do último detalhe obtido sem erro
 
     # -- agenda ---------------------------------------------------------
     @staticmethod
@@ -193,12 +194,23 @@ class Estado:
 
     # -- ciclo ----------------------------------------------------------
     def atualizar(self):
+        jogos = []
+        self.ultimo_erro = None
         try:
-            jogos = [j for j in (self.jogo(f) for f in self.candidatos())
-                     if j and j['status'] == 'LIVE']
-            self.ultimo_erro = None
+            for fid in self.candidatos():
+                try:
+                    j = self.jogo(fid)
+                    if j and j['status'] == 'LIVE':
+                        jogos.append(j)
+                        self.ultimo_bom[fid] = (j, time.time())
+                except Exception as e:
+                    self.ultimo_erro = f'jogo {fid}: {e}'
+                    # Falha pontual: mantém o último estado bom (90 s) em vez de
+                    # fazer o jogo desaparecer do direto (igual ao live.mjs).
+                    ant = self.ultimo_bom.get(fid)
+                    if ant and time.time() - ant[1] < 90:
+                        jogos.append(ant[0])
         except Exception as e:
-            jogos = []
             self.ultimo_erro = str(e)
         snap = {
             'atualizado': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),

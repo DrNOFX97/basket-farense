@@ -331,6 +331,8 @@ function seguirDireto(root, t, ctx, j, redesenhar) {
       const r = await fetch('/api/live', { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
+      // Resposta com erro da plataforma: não diz nada sobre o jogo.
+      if (d.erro && !(d.jogos || []).length) throw new Error(d.erro);
       const l = (d.jogos || []).find((x) => String(x.fid) === String(j.fid));
       if (l) {
         visto = true;
