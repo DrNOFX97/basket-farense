@@ -283,9 +283,92 @@ export default {
 
   mount(root, t, ctx) {
     const j = D.jogo(t, ctx.param);
-    if (!j || !j.detalhe) return;
-    const nomes = D.nomesJogo(j);
+    if (!j) return;
+    let limpaLigacoes = ligar(root, t, j);
+    const parar = seguirDireto(root, t, ctx, j, () => {
+      // Redesenha com os dados de direto, mantendo a aba e o filtro escolhidos.
+      limpaLigacoes();
+      const alvo = root.querySelector('#vista');
+      if (!alvo) return;
+      const abaAtual = aba;
+      const filtroAtual = filtro;
+      alvo.innerHTML = this.render(t, ctx);
+      aba = abaAtual;
+      limpaLigacoes = ligar(root, t, j);
+      if (filtroAtual !== 'todos') {
+        const b = root.querySelector(`[data-pbp="${filtroAtual}"]`);
+        if (b) b.click();
+      }
+    });
+    return () => { parar(); limpaLigacoes(); };
+  },
+};
 
+// Início do jogo como instante local: o texto acaba em Z mas é a hora do
+// pavilhão, por isso lê-se pelos componentes, sem converter fusos.
+function inicioLocal(iso) {
+  const p = F.partes(iso);
+  return p ? new Date(p.a, p.m, p.d, p.h || 0, p.mi || 0).getTime() : NaN;
+}
+
+// O JSON só é regenerado de tempos a tempos. Se o jogo já devia ter começado e
+// o JSON ainda não o dá por terminado, o /api/live (sem cache) completa o que
+// falta: marcador, parciais, boxscore e play-by-play. Quando o jogo desaparece
+// do direto depois de lá ter estado, fica como terminado com o último marcador.
+function seguirDireto(root, t, ctx, j, redesenhar) {
+  const ini = inicioLocal(j.data);
+  const agora = Date.now();
+  if (j.estado === 'CLOSED' || !(agora >= ini - 15 * 60e3 && agora <= ini + 5 * 3600e3)) return () => {};
+
+  let parado = false;
+  let timer = null;
+  let visto = false;
+
+  async function tick() {
+    if (parado) return;
+    let vivo = false;
+    try {
+      const r = await fetch('/api/live', { cache: 'no-store' });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = await r.json();
+      const l = (d.jogos || []).find((x) => String(x.fid) === String(j.fid));
+      if (l) {
+        visto = true;
+        vivo = l.status === 'LIVE';
+        const [pc, pf] = l.pontos || [0, 0];
+        Object.assign(j, {
+          estado: l.status === 'LIVE' ? 'LIVE' : (l.status || j.estado),
+          jogado: true,
+          meus: j.emCasa ? pc : pf,
+          adv: j.emCasa ? pf : pc,
+          parciais: l.parciais || j.parciais,
+          lideranca: l.lideranca || j.lideranca,
+          jogadores: l.jogadores || j.jogadores,
+          accoes: l.accoes || j.accoes,
+          eventos: l.eventos || j.eventos,
+          detalhe: true,
+        });
+        j.resultado = j.meus > j.adv ? 'V' : 'D';
+        redesenhar();
+      } else if (visto) {
+        // Saiu do direto: acabou. Mantém o último marcador até o JSON chegar.
+        j.estado = 'CLOSED';
+        redesenhar();
+        parado = true;
+        return;
+      }
+    } catch { /* sem direto: mantém o que a página já mostra */ }
+    if (!parado) timer = setTimeout(tick, vivo ? 4000 : 25000);
+  }
+
+  tick();
+  return () => { parado = true; clearTimeout(timer); };
+}
+
+// Liga abas, filtro do play-by-play e painel do jogo já desenhado.
+function ligar(root, t, j) {
+  if (!j.detalhe) return () => {};
+  const nomes = D.nomesJogo(j);
     const limpar = P.montar(root, () => [j]);
 
     const abas = [...root.querySelectorAll('[data-aba]')];
@@ -321,5 +404,4 @@ export default {
     });
 
     return limpar;
-  },
-};
+}
