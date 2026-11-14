@@ -242,7 +242,7 @@ function cartaoFaltas(j) {
     <tbody>${ordem.map(linha).join('')}</tbody></table></div>
     <div class="card-b" style="padding-top:12px">
       <p class="box-leg" style="padding:0 0 8px">A vermelho: 5 ou mais faltas de equipa no período. Jogadores com 4 ou 5 faltas, no jogo inteiro:</p>
-      ${itens ? `<ul class="rachas">${itens}</ul>` : '<p class="box-leg" style="padding:0">Ninguém chegou às 4 faltas.</p>'}
+      ${itens ? `<ul class="rachas">${itens}</ul>` : '<p class="box-leg" style="padding:0">Nenhum jogador chegou às 4 faltas.</p>'}
     </div>`);
 }
 
