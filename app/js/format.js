@@ -115,7 +115,10 @@ export function quando(iso) {
   if (min < 0) return 'a decorrer';
   if (min < 60) return `dentro de ${Math.max(1, min)} min`;
 
-  const dias = Math.round(dif / 86400000);
+  const agora = new Date();
+  const dias = Math.round(
+    (new Date(p.a, p.m, p.d).getTime() - new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()).getTime()) / 86400000,
+  );
   if (dias === 0) return 'hoje';
   if (dias === 1) return 'amanhã';
   if (dias < 7) return `em ${dias} dias`;
