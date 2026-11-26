@@ -390,9 +390,15 @@ def main():
     alvo = [a for a in sys.argv[1:] if not a.startswith('--')]
     d = gql('seasons', Q_SEASONS)
     seasons = (d.get('data') or {}).get('seasons') or []
+    disponiveis = [s.get('name') for s in seasons]
     seasons = [s for s in seasons if s['name'] in ('2026/2027',)]
     if alvo:
         seasons = [s for s in seasons if s['name'] in alvo]
+    if not seasons:
+        # Nunca gravar um ficheiro vazio por cima de dados bons: falha alto,
+        # o workflow para e o site continua com a ultima versao valida.
+        raise SystemExit(f'ERRO: epoca 2026/2027 nao encontrada na API. '
+                         f'Epocas devolvidas: {disponiveis}')
 
     epocas = []
     for s in seasons:
@@ -423,6 +429,9 @@ def main():
             equipas.append(pull_team(t, s['name']))
         epocas.append({'id': s['name'].replace('/', '-'), 'nome': s['name'],
                        'equipas': unicos(equipas)})
+
+    if not any(t['jogos'] for e in epocas for t in e['equipas']):
+        raise SystemExit('ERRO: a API nao devolveu nenhum jogo; dados anteriores mantidos.')
 
     dados = {'gerado': time.strftime('%Y-%m-%d %H:%M'),
              'fonte': 'API NBN23 (Swish)',
