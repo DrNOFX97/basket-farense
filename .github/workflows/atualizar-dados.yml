@@ -15,6 +15,11 @@ on:
         type: choice
         options: [sempre, se-mudou]
         default: sempre
+      gerar:
+        description: 'sim = refaz os dados a partir da API; nao = publica os dados já no repositório (útil quando a API está em baixo)'
+        type: choice
+        options: ['sim', 'nao']
+        default: 'sim'
 
 concurrency:
   group: atualizar-dados
@@ -38,13 +43,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Guardar dados anteriores
+        run: cp data/farense.json "$RUNNER_TEMP/antes.json"
+
       - name: Gerar dados
+        if: github.event.inputs.gerar != 'nao'
         env:
           SWISH_EMAIL: ${{ secrets.SWISH_EMAIL }}
           SWISH_PASSWORD: ${{ secrets.SWISH_PASSWORD }}
-        run: |
-          cp data/farense.json "$RUNNER_TEMP/antes.json"
-          python3 build_data.py
+        run: python3 build_data.py
 
       - name: Verificar alterações
         id: mudou
