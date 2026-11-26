@@ -60,15 +60,25 @@ def gql(key, query, variables=None):
     path = os.path.join(CACHE, key + '.json')
     if os.path.exists(path) and not SEM_CACHE:
         return json.load(open(path, encoding='utf-8'))
-    last = {}
+    d, motivo = {}, ''
     for _ in range(3):
         st, d = c.gql(query, variables)
-        last = d
-        if not d.get('errors'):
+        # Um 502/503 devolve HTML sem a chave "errors": so o codigo HTTP o denuncia.
+        if st != 200 or 'raw' in d:
+            motivo = f'HTTP {st}'
+        elif d.get('errors'):
+            motivo = d['errors'][0]['message'][:90]
+        else:
+            motivo = ''
             break
         time.sleep(2)
-    if d.get('errors'):
-        print(f'    ! {key}: {d["errors"][0]["message"][:90]}')
+    if motivo:
+        print(f'    ! {key}: {motivo}')
+        if motivo.startswith('HTTP'):
+            # Plataforma em baixo: abortar em vez de seguir com dados vazios.
+            raise SystemExit(f'ERRO: API NBN23 indisponivel ({motivo}) em {key}; '
+                             'dados anteriores mantidos.')
+        return d  # erro de GraphQL: nao fica em cache
     json.dump(d, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
     return d
 
